@@ -7,6 +7,9 @@
 # module stuff
 *.iml
 
+# compiled stuff
+target/
+
 # CMake
 cmake-build-debug/
 
