@@ -2,7 +2,7 @@ import java.util.ArrayList;
 
 public class Graph {
 
-    ArrayList<Vertex> vertices;
+    private ArrayList<Vertex> vertices;
 
     Graph() {
         vertices = new ArrayList<Vertex>();
@@ -21,6 +21,15 @@ public class Graph {
      */
     public int getSize() {
         return vertices.size();
+    }
+
+    /**
+     * Get the vertex with the given ID
+     * @param id The id of the vertex you want
+     * @return the Vertex with the number/id "ID"
+     */
+    public Vertex getVertex(int id) {
+        return vertices.get(id);
     }
 
     /**

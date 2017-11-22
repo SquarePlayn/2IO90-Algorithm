@@ -19,4 +19,8 @@ public class Vertex {
         connections = new ArrayList<Vertex>();
     }
 
+    public int getNumber() {
+        return number;
+    }
+
 }
