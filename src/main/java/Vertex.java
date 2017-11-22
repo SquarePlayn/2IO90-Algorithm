@@ -2,11 +2,15 @@ import java.util.ArrayList;
 
 public class Vertex {
 
-    ArrayList<Vertex> connection;
+    ArrayList<Vertex> connections;
+    int number;
+    Vertex bfsFrom;
+    int bfsDistance;
 
-    public Vertex() {
+    public Vertex(int nr) {
+        number = nr;
+        connections = new ArrayList<Vertex>();
 
-        connection = new ArrayList<Vertex>();
 
     }
 
