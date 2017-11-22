@@ -1,5 +1,6 @@
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 /**
  * Singleton class that manages IO for the Taxi Scheduling project for DBL Algorithms Q2 2016/2017. Enforces proper
@@ -20,6 +21,7 @@ public class TaxiScanner {
     private State state;
     private int preambleLinesLeft;
     private Scanner scanner;
+    private Consumer<String> interpreterReader;
 
     private enum State {INITIAL, PREAMBLE, AWAITINGPRINT, AWAITINGNEXTLINE}
 
@@ -40,6 +42,10 @@ public class TaxiScanner {
             instance = new TaxiScanner();
         }
         return instance;
+    }
+
+    public void registerReader(Consumer<String> reader) {
+        this.interpreterReader = reader;
     }
 
     /**
@@ -104,5 +110,6 @@ public class TaxiScanner {
         }
 
         System.out.println(s);
+        interpreterReader.accept(s);
     }
 }
