@@ -33,7 +33,7 @@ public class Taxi {
             position = path.get(0);
             path.remove(0);
 
-            return "m " + id + " " + position.getNumber() + " ";
+            return "m " + id + " " + position.getId() + " ";
 
         } else {
             if (passengers.isEmpty()) {
@@ -53,7 +53,7 @@ public class Taxi {
                 customer = null;
                 inOperation = false;
 
-                return "d " + id + " " + position.getNumber() + " ";
+                return "d " + id + " " + position.getId() + " ";
 
             }
         }

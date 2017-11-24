@@ -56,8 +56,8 @@ public class Graph {
         }
 
         //Since the graph is bi-directional/undirected, add a connection to both vertices
-        vertices.get(a).connections.add(vertices.get(b));
-        vertices.get(b).connections.add(vertices.get(a));
+        vertices.get(a).addNeigbour(vertices.get(b));
+        vertices.get(b).addNeigbour(vertices.get(a));
     }
 
     /**
@@ -114,7 +114,7 @@ public class Graph {
         boolean visited[] = new boolean[getSize()];
 
         //Start with the start. Since we have added it now, set visited to true.
-        visited[start.number] = true;
+        visited[start.getId()] = true;
         queue.add(start);
 
         //Now make sure we empty the whole queue, resulting on going over each vertice in the connected graph
@@ -124,14 +124,14 @@ public class Graph {
             queue.remove(0);
 
             //For each connection:
-            for(Vertex towards: now.connections) {
-                if(!visited[towards.number]) {
+            for(Vertex towards: now.getNeigbours()) {
+                if(!visited[towards.getId()]) {
                     //If we have not yet done anything with this node, we have not seen it before
                     //That means that we have now taken the shortest route to it. So the distance is 1 greater
                     // than the distance to the node we are considering, and the shortest path back is trough the node
                     // that we are considering.
                     //Also add it to the (end of the) queue to traverse further
-                    visited[towards.number] = true;
+                    visited[towards.getId()] = true;
                     queue.add(towards);
                     towards.bfsFrom = now;
                     towards.bfsDistance = now.bfsDistance + 1;

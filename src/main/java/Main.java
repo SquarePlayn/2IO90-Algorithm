@@ -22,6 +22,8 @@ public class Main {
     int testMinutes = 15; //TODO Implement this from the preamble Reader to be the correct value
     int callMinutes = 30; //TODO Implement. testMinutes = t' and callMinutes is t as specified in the input document
 
+    private static final boolean DEBUG = true;
+
     public void setup() {
 
         scanner = TaxiScanner.getInstance();
@@ -137,10 +139,18 @@ public class Main {
     private void initialiseTaxis() {
         for (Taxi taxi : taxiList) {
             taxi.setPosition(graph.getVertex((int) (Math.random() * graph.getSize())));
-            scanner.println("m " + taxi.getId() + " " + taxi.getPosition().getNumber() + " ");
+            scanner.println("m " + taxi.getId() + " " + taxi.getPosition().getId() + " ");
         }
         // Flush this line of initial (random) positions to advance to the next (first) minute of input
         scanner.println("c");
+    }
+
+    public static void debug(String message) {
+
+        if (DEBUG) {
+            System.out.println(message);
+        }
+
     }
 
     public static void main(String[] args) {
