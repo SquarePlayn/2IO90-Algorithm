@@ -21,7 +21,9 @@ public class TaxiScanner {
     private State state;
     private int preambleLinesLeft;
     private Scanner scanner;
-    private Consumer<String> interpreterReader;
+
+    private Consumer<String> inputReader;
+    private Consumer<String> outputReader;
 
     private enum State {INITIAL, PREAMBLE, AWAITINGPRINT, AWAITINGNEXTLINE}
 
@@ -44,8 +46,12 @@ public class TaxiScanner {
         return instance;
     }
 
-    public void registerReader(Consumer<String> reader) {
-        this.interpreterReader = reader;
+    public void registerInputReader(Consumer<String> inputReader) {
+        this.inputReader = inputReader;
+    }
+
+    public void registerOutputReader(Consumer<String> outputReader) {
+        this.outputReader = outputReader;
     }
 
     /**
@@ -68,28 +74,29 @@ public class TaxiScanner {
             throw new NoSuchElementException("No line remaining on input!");
         }
 
+        String nextLine = scanner.nextLine();
+
         switch(state)
         {
             case INITIAL:
-                String lineRead = scanner.nextLine();
                 try {
-                    preambleLinesLeft = Integer.parseInt(lineRead);
+                    preambleLinesLeft = Integer.parseInt(nextLine);
                 } catch (NumberFormatException e) {
                     throw new NumberFormatException("First line should be integer");
                 }
                 state = State.PREAMBLE;
-                return lineRead;
+                return nextLine;
             case PREAMBLE:
                 preambleLinesLeft--;
                 if (preambleLinesLeft == 0) {
                     state = State.AWAITINGPRINT;
                 }
-                return scanner.nextLine();
+                return nextLine;
             case AWAITINGPRINT:
                 throw new IllegalStateException("nextLine called when print expected");
             case AWAITINGNEXTLINE:
                 state = State.AWAITINGPRINT;
-                return scanner.nextLine();
+                return nextLine;
             default:
                 throw new IllegalStateException("Switch should never default");
         }
@@ -110,6 +117,6 @@ public class TaxiScanner {
         }
 
         System.out.println(s);
-        interpreterReader.accept(s);
+        outputReader.accept(s);
     }
 }
