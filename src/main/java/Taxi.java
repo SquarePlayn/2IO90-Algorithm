@@ -33,7 +33,7 @@ public class Taxi {
             position = path.get(0);
             path.remove(0);
 
-            return "m " + id + " " + position.getId() + " ";
+            return "m " + getOutputId() + " " + position.getId() + " ";
 
         } else {
             if (passengers.isEmpty()) {
@@ -44,7 +44,7 @@ public class Taxi {
                 passengers.add(customer);
                 setPath(graph.getShortestPath(position, customer.getDestination()));
 
-                return "p " + id + " " + customer.getDestination().getId() + " ";
+                return "p " + getOutputId() + " " + customer.getDestination().getId() + " ";
 
             } else {
                 //We are done driving, and have already picked up our customer, so that means we are at the destination
@@ -53,7 +53,7 @@ public class Taxi {
                 customer = null;
                 inOperation = false;
 
-                return "d " + id + " " + position.getId() + " ";
+                return "d " + getOutputId() + " " + position.getId() + " ";
 
             }
         }
@@ -66,6 +66,10 @@ public class Taxi {
 
     public int getId() {
         return id;
+    }
+
+    public int getOutputId() {
+        return id+1;
     }
 
     public void setPosition(Vertex position) {

@@ -22,7 +22,7 @@ public class Main {
     int testMinutes = 15;
     int callMinutes = 30;
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     public void setup() {
 
@@ -121,10 +121,10 @@ public class Main {
         }
 
         // Advance all taxis that have an operation
+        String output = " ";
         for (int i=0; i<taxiInOperationList.size(); i++) {
             Taxi taxi = taxiInOperationList.get(i);
-            String output = taxi.continueOperation(graph);
-            scanner.println(output);
+            output += taxi.continueOperation(graph);
 
             if (!taxi.getInOperation()) {
                 // If the taxi is now done delivering its client, we can put it back in the queue
@@ -135,7 +135,8 @@ public class Main {
         }
 
         // After having advanced all, declare the current minute complete
-        scanner.println("c");
+        output += "c";
+        scanner.println(output);
     }
 
     /**
@@ -147,7 +148,7 @@ public class Main {
         String output = "";
         for (Taxi taxi : taxiList) {
             taxi.setPosition(graph.getVertex((int) (Math.random() * graph.getSize())));
-            output += "m " + taxi.getId() + " " + taxi.getPosition().getId() + " ";
+            output += "m " + taxi.getOutputId() + " " + taxi.getPosition().getId() + " ";
         }
         // Flush this line of initial (random) positions to advance to the next (first) minute of input
         output += "c";
