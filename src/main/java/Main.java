@@ -24,8 +24,8 @@ public class Main {
 		
 		scanner = TaxiScanner.getInstance();
 
-		taxiList = new ArrayList<Taxi>();
-		customerList = new ArrayList<Customer>();
+		taxiList = new ArrayList<>();
+		customerList = new ArrayList<>();
 
 		graph = new Graph();
 
@@ -52,9 +52,8 @@ public class Main {
 		customerQueue = new ArrayList<>();
 		taxiReadyQueue = new ArrayList<>();
 		taxiInOperationList = new ArrayList<>();
-		for(Taxi taxi: taxiList) {
-			taxiReadyQueue.add(taxi);
-		}
+
+		taxiReadyQueue.addAll(taxiList); // Initially all taxis are unoccupied, so add them all to the ready queue.
 
 		//While there are lines to read, read them and advance to next minute
 		while(scanner.hasNextLine()) {
@@ -137,7 +136,7 @@ public class Main {
 	 */
 	private void initialiseTaxis() {
 		for(Taxi taxi: taxiList) {
-			taxi.setPosition(graph.getVertex((int)Math.random()*graph.getSize()));
+			taxi.setPosition(graph.getVertex((int)(Math.random()*graph.getSize())));
 			scanner.println("m "+ taxi.getNumber() + " " + taxi.getPosition().getNumber() + " ");
 		}
 		//Flush this line of initial (random) positions to advance to the next (first) minute of input

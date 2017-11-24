@@ -80,3 +80,4 @@ local.properties
 .cache-main
 .scala_dependencies
 .worksheet
+src/main/java/META-INF/MANIFEST.MF
