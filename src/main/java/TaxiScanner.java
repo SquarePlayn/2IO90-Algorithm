@@ -1,3 +1,7 @@
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.function.Consumer;
@@ -17,7 +21,9 @@ import java.util.function.Consumer;
  */
 public class TaxiScanner {
 
+    private static File inputFile;
     private static TaxiScanner instance = null;
+
     private State state;
     private int preambleLinesLeft;
     private Scanner scanner;
@@ -31,8 +37,28 @@ public class TaxiScanner {
      * Constructor is private to ensure singleton behaviour.
      */
     private TaxiScanner(){
+        InputStream input = System.in;
+
+        if (inputFile != null) {
+            try {
+                System.out.println(inputFile.getAbsolutePath());
+                input = new FileInputStream(inputFile);
+            } catch (FileNotFoundException e) {
+                System.out.println("Error while reading input file, using System.in.");
+                e.printStackTrace();
+            }
+        }
+
         state = State.INITIAL;
-        scanner = new Scanner(System.in);
+        scanner = new Scanner(input);
+    }
+
+    /**
+     * Set the file to read as input, will use System.in when not set.
+     * @param inputFile The file to read.
+     */
+    public static void setInputFile(File inputFile) {
+        TaxiScanner.inputFile = inputFile;
     }
 
     /**
