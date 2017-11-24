@@ -1,184 +1,207 @@
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class Main {
 
-	private TaxiScanner scanner;
-	private PreambleReader preambleReader;
+    private TaxiScanner scanner;
+    private PreambleReader preambleReader;
 
-	private int alpha; // Alpha for the cost function
-	private int maxTime; // Maximum time between ordering a taxi and being dropped off
+    private int alpha; // Alpha for the cost function
+    private int maxTime; // Maximum time between ordering a taxi and being dropped off
+    private int amountOfTaxis;
 
-	private ArrayList<Taxi> taxiList;
-	private ArrayList<Customer> customerList;
+    private ArrayList<Taxi> taxiList;
+    private ArrayList<Customer> customerList;
 
-	private Graph graph;
+    private Graph graph;
 
-	//The following variables are used for the prototype that uses queues for the taxis and customers
-	private ArrayList<Taxi> taxiReadyQueue;
-	private ArrayList<Taxi> taxiInOperationList;
-	private ArrayList<Customer> customerQueue;
-	int testMinutes = 15; //TODO Implement this from the preamble Reader to be the correct value
-	int callMinutes = 30; //TODO Implement. testMinutes = t' and callMinutes is t as specified in the input document
+    //The following variables are used for the prototype that uses queues for the taxis and customers
+    private ArrayList<Taxi> taxiReadyQueue;
+    private ArrayList<Taxi> taxiInOperationList;
+    private ArrayList<Customer> customerQueue;
+    int testMinutes = 15; //TODO Implement this from the preamble Reader to be the correct value
+    int callMinutes = 30; //TODO Implement. testMinutes = t' and callMinutes is t as specified in the input document
 
-	public void setup() {
-		
-		scanner = TaxiScanner.getInstance();
+    public void setup() {
 
-		taxiList = new ArrayList<>();
-		customerList = new ArrayList<>();
+        scanner = TaxiScanner.getInstance();
 
-		graph = new Graph();
+        taxiList = new ArrayList<>();
+        customerList = new ArrayList<>();
 
-		preambleReader = new PreambleReader(this);
+        graph = new Graph();
 
-		preambleReader.read();
+        preambleReader = new PreambleReader(this);
 
-	}
-	
-	public void run() {
-		
-		setup();
+        if (!preambleReader.read()) {
+            throw new RuntimeException("An error occurred while reading preamble.");
+        }
+    }
 
-		//Read over all test case info without delivering people
-		initialiseTaxis();
-		for(int i=1; i<testMinutes; i++) {
-			scanner.println("c");
-		}
+    public void run() {
 
-		//From here on, the Actual calling and being called of taxis starts
-		initialiseTaxis();
+        setup();
 
-		//Initialize the queues.
-		customerQueue = new ArrayList<>();
-		taxiReadyQueue = new ArrayList<>();
-		taxiInOperationList = new ArrayList<>();
+        // Create taxis based on amount read
+        for (int i = 0; i < amountOfTaxis; i++) {
+            taxiList.add(new Taxi(i));
+        }
 
-		taxiReadyQueue.addAll(taxiList); // Initially all taxis are unoccupied, so add them all to the ready queue.
+        //Read over all test case info without delivering people
+        initialiseTaxis();
+        for (int i = 1; i < testMinutes; i++) {
+            scanner.println("c");
+        }
 
-		//While there are lines to read, read them and advance to next minute
-		while(scanner.hasNextLine()) {
-			readInput();
-			advanceMinute();
-		}
+        //From here on, the Actual calling and being called of taxis starts
+        initialiseTaxis();
 
-		//Since there are no more lines to read, advance untill all customers are delivered
-		while(!customerQueue.isEmpty() || !taxiInOperationList.isEmpty()) {
-			advanceMinute();
-		}
-		
-	}
+        //Initialize the queues.
+        customerQueue = new ArrayList<>();
+        taxiReadyQueue = new ArrayList<>();
+        taxiInOperationList = new ArrayList<>();
 
-	/**
-	 * Reads one line of input and processes it
-	 */
-	private void readInput() {
-		if(scanner.hasNextLine()) {
-			String[] input = scanner.nextLine().split(" ");
+        taxiReadyQueue.addAll(taxiList); // Initially all taxis are unoccupied, so add them all to the ready queue.
 
-			int amountOfCalls = Integer.parseInt(input[0]);
-			for(int i=0; i<amountOfCalls; i++) {
-				//Read in each new customer and add the customer to the waiting queue
-				Vertex position = graph.getVertex(Integer.parseInt(input[i*2+1]));
-				Vertex destination = graph.getVertex(Integer.parseInt(input[i*2+2]));
-				customerQueue.add(new Customer(position, destination));
-			}
-		}
-	}
+        //While there are lines to read, read them and advance to next minute
+        while (scanner.hasNextLine()) {
+            readInput();
+            advanceMinute();
+        }
 
-	/**
-	 * Execute the advancing over the next minute. Basically move all taxis and output their actions.
-	 * TODO Find better name
-	 */
-	private void advanceMinute() {
-		//First assign a taxi to each waiting customer as far as possible
-		//TODO Note: This leads to problems when a taxi for a later customer arrives before the earlier customer is picked up
-		while(!customerQueue.isEmpty()) {
-			if(taxiReadyQueue.isEmpty()) {
-				//If there are no more ready taxis, the remaining customers will have to wait
-				break;
+        //Since there are no more lines to read, advance untill all customers are delivered
+        while (!customerQueue.isEmpty() || !taxiInOperationList.isEmpty()) {
+            advanceMinute();
+        }
+    }
 
-			} else {
-				// Get the first-up taxi, pop it from the queue and add it to the ones in operation
-				Taxi taxi = taxiReadyQueue.get(0);
-				taxiReadyQueue.remove(0);
-				taxiInOperationList.add(taxi);
+    /**
+     * Reads one line of input and processes it
+     */
+    private void readInput() {
+        if (scanner.hasNextLine()) {
+            String[] input = scanner.nextLine().split(" ");
 
-				//Pop the custoper that is first-up
-				Customer customer = customerQueue.get(0);
-				customerQueue.remove(0);
+            int amountOfCalls = Integer.parseInt(input[0]);
+            for (int i = 0; i < amountOfCalls; i++) {
+                //Read in each new customer and add the customer to the waiting queue
+                Vertex position = graph.getVertex(Integer.parseInt(input[i * 2 + 1]));
+                Vertex destination = graph.getVertex(Integer.parseInt(input[i * 2 + 2]));
+                customerQueue.add(new Customer(position, destination));
+            }
+        }
+    }
 
-				//Assign the taxi to the customer and make the taxi go towards the customer
-				taxi.setCustomer(customer);
-				taxi.setPath(graph.getShortestPath(taxi.getPosition(), customer.getPosition()));
-			}
-		}
+    /**
+     * Execute the advancing over the next minute. Basically move all taxis and output their actions.
+     * TODO Find better name
+     */
+    private void advanceMinute() {
+        // First assign a taxi to each waiting customer as far as possible
+        // TODO Note: This leads to problems when a taxi for a later customer arrives before the earlier customer is picked up
+        // Loop until there are no customers waiting anymore.
+        // If there are no more ready taxis, the remaining customers will have to wait
+        while (!customerQueue.isEmpty() && !taxiReadyQueue.isEmpty()) {
+            // Get the first-up taxi, pop it from the queue and add it to the ones in operation
+            Taxi taxi = taxiReadyQueue.remove(0);
+            taxiInOperationList.add(taxi);
 
+            // Pop the customer that is first-up
+            Customer customer = customerQueue.remove(0);
 
-		//Advance all taxis that have an operation
-		for(Taxi taxi: taxiInOperationList) {
-			String output = taxi.continueOperation(graph);
-			scanner.println(output);
+            //Assign the taxi to the customer and make the taxi go towards the customer
+            taxi.setCustomer(customer);
+            taxi.setPath(graph.getShortestPath(taxi.getPosition(), customer.getPosition()));
+        }
 
-			if(!taxi.getInOperation()){
-				//If the taxi is now done delivering its client, we can put it back in the queue
-				taxiInOperationList.remove(taxi);
-				taxiReadyQueue.add(taxi);
-			}
-		}
+        // Advance all taxis that have an operation
+        for (Taxi taxi : taxiInOperationList) {
+            String output = taxi.continueOperation(graph);
+            scanner.println(output);
 
-		//After having advanced all, declare the current minute complete
-		scanner.println("c");
-	}
+            if (!taxi.getInOperation()) {
+                // If the taxi is now done delivering its client, we can put it back in the queue
+                taxiInOperationList.remove(taxi);
+                taxiReadyQueue.add(taxi);
+            }
+        }
 
-	/**
-	 * Initializes each taxi to a random position and prints that to the output
-	 * Only run when you need to output the first (init) line of output
-	 */
-	private void initialiseTaxis() {
-		for(Taxi taxi: taxiList) {
-			taxi.setPosition(graph.getVertex((int)(Math.random()*graph.getSize())));
-			scanner.println("m "+ taxi.getNumber() + " " + taxi.getPosition().getNumber() + " ");
-		}
-		//Flush this line of initial (random) positions to advance to the next (first) minute of input
-		scanner.println("c");
-	}
+        // After having advanced all, declare the current minute complete
+        scanner.println("c");
+    }
 
-	public static void main(String[] args) {
-		
-		(new Main()).run();
+    /**
+     * Initializes each taxi to a random position and prints that to the output
+     * Only run when you need to output the first (init) line of output
+     */
+    private void initialiseTaxis() {
+        for (Taxi taxi : taxiList) {
+            taxi.setPosition(graph.getVertex((int) (Math.random() * graph.getSize())));
+            scanner.println("m " + taxi.getId() + " " + taxi.getPosition().getNumber() + " ");
+        }
+        // Flush this line of initial (random) positions to advance to the next (first) minute of input
+        scanner.println("c");
+    }
 
-	}
+    public static void main(String[] args) {
 
-	public TaxiScanner getScanner() {
-		return scanner;
-	}
+        (new Main()).run();
 
-	public int getAlpha() {
-		return alpha;
-	}
+    }
 
-	public void setAlpha(int alpha) {
-		this.alpha = alpha;
-	}
+    public TaxiScanner getScanner() {
+        return scanner;
+    }
 
-	public int getMaxTime() {
-		return maxTime;
-	}
+    public int getAlpha() {
+        return alpha;
+    }
 
-	public void setMaxTime(int maxTime) {
-		this.maxTime = maxTime;
-	}
+    public void setAlpha(int alpha) {
+        this.alpha = alpha;
+    }
 
-	public ArrayList<Taxi> getTaxiList() {
-		return taxiList;
-	}
+    public int getMaxTime() {
+        return maxTime;
+    }
 
-	public ArrayList<Customer> getCustomerList() {
-		return customerList;
-	}
+    public void setMaxTime(int maxTime) {
+        this.maxTime = maxTime;
+    }
 
-	public Graph getGraph() {
-		return graph;
-	}
+    public int getAmountOfTaxis() {
+        return amountOfTaxis;
+    }
 
+    public void setAmountOfTaxis(int amountOfTaxis) {
+        this.amountOfTaxis = amountOfTaxis;
+    }
+
+    public ArrayList<Taxi> getTaxiList() {
+        return taxiList;
+    }
+
+    public ArrayList<Customer> getCustomerList() {
+        return customerList;
+    }
+
+    public Graph getGraph() {
+        return graph;
+    }
+
+    public int getTestMinutes() {
+        return testMinutes;
+    }
+
+    public void setTestMinutes(int testMinutes) {
+        this.testMinutes = testMinutes;
+    }
+
+    public int getCallMinutes() {
+        return callMinutes;
+    }
+
+    public void setCallMinutes(int callMinutes) {
+        this.callMinutes = callMinutes;
+    }
 }

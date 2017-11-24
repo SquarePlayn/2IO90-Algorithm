@@ -22,17 +22,17 @@ public class PreambleReader {
         String taxiLine = scanner.nextLine(); // Line 4: x and c, number of taxis available and max capacity
         String[] taxiLineSplit = taxiLine.split(" ");
 
-        int taxiAmount = Integer.parseInt(taxiLineSplit[0]);
+        main.setAmountOfTaxis(Integer.parseInt(taxiLineSplit[0])); // process x - amount of taxis
 
-        ArrayList<Taxi> taxiList = main.getTaxiList();
-
-        for (int i = 0; i < taxiAmount; i++) {
-            taxiList.add(new Taxi()); // Create taxis based on amount read
-        }
-
-        Taxi.setMaxCapacity(Integer.parseInt(taxiLineSplit[1]));
+        Taxi.setMaxCapacity(Integer.parseInt(taxiLineSplit[1])); // process c - max taxi capacity
 
         main.getGraph().addVertices(Integer.parseInt(scanner.nextLine())); // Line 5: number n of nodes in the network
+
+        String testCallMinutesLine = scanner.nextLine(); // Line 6: test minutes t and call minutes t'
+        String[] testCallMinutesSplit = testCallMinutesLine.split(" ");
+
+        main.setTestMinutes(Integer.parseInt(testCallMinutesSplit[0]));
+        main.setCallMinutes(Integer.parseInt(testCallMinutesSplit[1]));
 
         return true;
 
