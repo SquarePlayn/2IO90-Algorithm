@@ -75,6 +75,7 @@ public class TaxiScanner {
         }
 
         String nextLine = scanner.nextLine();
+        inputReader.accept(nextLine);
 
         switch(state)
         {
