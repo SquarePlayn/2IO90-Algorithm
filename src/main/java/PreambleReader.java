@@ -18,7 +18,7 @@ public class PreambleReader {
 
         linesLeft = Integer.parseInt(scanner.nextLine()); // Line 1: preamble length
 
-        main.setAlpha(Integer.parseInt(scanner.nextLine())); // Line 2: variable alpha
+        main.setAlpha(Double.parseDouble(scanner.nextLine())); // Line 2: variable alpha
         main.setMaxTime(Integer.parseInt(scanner.nextLine())); // Line 3: maximum time
 
         String taxiLine = scanner.nextLine(); // Line 4: x and c, number of taxis available and max capacity
@@ -30,6 +30,7 @@ public class PreambleReader {
 
         main.getGraph().addVertices(Integer.parseInt(scanner.nextLine())); // Line 5: number n of nodes in the network
 
+        Main.debug("Start reading "+ main.getGraph().getSize()+" lines of node information");
         for (int i = 0; i < main.getGraph().getSize(); i++) { // Line 6 + i
 
             String graphLine = scanner.nextLine(); // Read a line of the graph information
@@ -47,7 +48,12 @@ public class PreambleReader {
 
         }
 
+        Main.debug("Finished reading all node information");
+
         String testCallMinutesLine = scanner.nextLine(); // Line 6 + n: test minutes t and call minutes t'
+
+        Main.debug("Finished reading the 'minutes' line");
+
         String[] testCallMinutesSplit = testCallMinutesLine.split(" ");
 
         main.setTestMinutes(Integer.parseInt(testCallMinutesSplit[0]));

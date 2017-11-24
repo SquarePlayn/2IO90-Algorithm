@@ -44,7 +44,7 @@ public class Taxi {
                 passengers.add(customer);
                 setPath(graph.getShortestPath(position, customer.getDestination()));
 
-                return "p " + id + " " + customer.getDestination() + " ";
+                return "p " + id + " " + customer.getDestination().getId() + " ";
 
             } else {
                 //We are done driving, and have already picked up our customer, so that means we are at the destination

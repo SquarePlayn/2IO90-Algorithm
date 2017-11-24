@@ -6,7 +6,7 @@ public class Main {
     private TaxiScanner scanner;
     private PreambleReader preambleReader;
 
-    private int alpha; // Alpha for the cost function
+    private double alpha; // Alpha for the cost function
     private int maxTime; // Maximum time between ordering a taxi and being dropped off
     private int amountOfTaxis;
 
@@ -19,8 +19,8 @@ public class Main {
     private ArrayList<Taxi> taxiReadyQueue;
     private ArrayList<Taxi> taxiInOperationList;
     private ArrayList<Customer> customerQueue;
-    int testMinutes = 15; //TODO Implement this from the preamble Reader to be the correct value
-    int callMinutes = 30; //TODO Implement. testMinutes = t' and callMinutes is t as specified in the input document
+    int testMinutes = 15;
+    int callMinutes = 30;
 
     private static final boolean DEBUG = true;
 
@@ -49,11 +49,15 @@ public class Main {
             taxiList.add(new Taxi(i));
         }
 
+
         //Read over all test case info without delivering people
         initialiseTaxis();
         for (int i = 1; i < testMinutes; i++) {
+            Main.debug("Starting minute "+i);
+            scanner.nextLine();
             scanner.println("c");
         }
+        scanner.nextLine();
 
         //From here on, the Actual calling and being called of taxis starts
         initialiseTaxis();
@@ -117,13 +121,15 @@ public class Main {
         }
 
         // Advance all taxis that have an operation
-        for (Taxi taxi : taxiInOperationList) {
+        for (int i=0; i<taxiInOperationList.size(); i++) {
+            Taxi taxi = taxiInOperationList.get(i);
             String output = taxi.continueOperation(graph);
             scanner.println(output);
 
             if (!taxi.getInOperation()) {
                 // If the taxi is now done delivering its client, we can put it back in the queue
                 taxiInOperationList.remove(taxi);
+                i--;
                 taxiReadyQueue.add(taxi);
             }
         }
@@ -137,12 +143,16 @@ public class Main {
      * Only run when you need to output the first (init) line of output
      */
     private void initialiseTaxis() {
+        Main.debug("Starting initialize taxis");
+        String output = "";
         for (Taxi taxi : taxiList) {
             taxi.setPosition(graph.getVertex((int) (Math.random() * graph.getSize())));
-            scanner.println("m " + taxi.getId() + " " + taxi.getPosition().getId() + " ");
+            output += "m " + taxi.getId() + " " + taxi.getPosition().getId() + " ";
         }
         // Flush this line of initial (random) positions to advance to the next (first) minute of input
-        scanner.println("c");
+        output += "c";
+        Main.debug("InitialiseTaxis() is now outputting "+output);
+        scanner.println(output);
     }
 
     public static void debug(String message) {
@@ -163,11 +173,11 @@ public class Main {
         return scanner;
     }
 
-    public int getAlpha() {
+    public double getAlpha() {
         return alpha;
     }
 
-    public void setAlpha(int alpha) {
+    public void setAlpha(double alpha) {
         this.alpha = alpha;
     }
 
