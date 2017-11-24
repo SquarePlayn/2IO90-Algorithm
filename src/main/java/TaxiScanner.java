@@ -75,7 +75,10 @@ public class TaxiScanner {
         }
 
         String nextLine = scanner.nextLine();
-        inputReader.accept(nextLine);
+
+        if (inputReader != null) {
+            inputReader.accept(nextLine);
+        }
 
         switch(state)
         {
@@ -118,6 +121,10 @@ public class TaxiScanner {
         }
 
         System.out.println(s);
-        outputReader.accept(s);
+
+        if (outputReader != null) {
+            outputReader.accept(s);
+        }
+
     }
 }
