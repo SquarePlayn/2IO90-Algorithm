@@ -121,7 +121,7 @@ public class Main {
         }
 
         // Advance all taxis that have an operation
-        String output = " ";
+        String output = "";
         for (int i=0; i<taxiInOperationList.size(); i++) {
             Taxi taxi = taxiInOperationList.get(i);
             output += taxi.continueOperation(graph);
