@@ -27,8 +27,14 @@ public abstract class Algorithm {
      * @return Output for this minute.
      * @param callsLeft
      */
-    public String advanceMinute(boolean callsLeft) {
-        String output = processMinute();
+    public String advanceMinute(boolean callsLeft, int minuteNumber) {
+
+        //If there was a call list left this minute, read it
+        if(callsLeft) {
+            readMinute(sharedData.getCallList().getMinute(minuteNumber));
+        }
+
+        String output = processMinute(callsLeft);
 
         lastUpdatedMinute++;
 
@@ -36,6 +42,12 @@ public abstract class Algorithm {
 
         return output;
     }
+
+    /**
+     * Process the data for the minute that was given.
+     * @param minute the minute to be processed. Note the minutes should be processed in ascending order
+     */
+    public abstract void readMinute(Minute minute);
 
     /**
      * Abstract function the algorithm will use to setup its dependencies it only needs to create once.
@@ -47,7 +59,7 @@ public abstract class Algorithm {
      * Implemented by each algorithm to specify the output for each minute.
      * @return Output for this minute.
      */
-    public abstract String processMinute();
+    public abstract String processMinute(boolean callsLeft);
 
     /**
      * Called by scheduler to signal when this algorithm is put in halt.
@@ -58,7 +70,7 @@ public abstract class Algorithm {
      * Called by scheduler to signal when this algorithm resumes execution, after this algorithm has missed some
      * minutes.
      */
-    public abstract void continueExecution();
+    public abstract void continueExecution(int upToMinute);
 
     public boolean isInitialized() {
         return isInitialized;

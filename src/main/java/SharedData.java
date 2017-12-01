@@ -22,4 +22,8 @@ public class SharedData {
     public Graph getGraph() {
         return graph;
     }
+
+    public CallList getCallList() {
+        return callList;
+    }
 }

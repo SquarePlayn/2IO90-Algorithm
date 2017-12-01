@@ -9,6 +9,13 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
 
     @Override
+    public void readMinute(Minute minute) {
+        for (Call call: minute) {
+            customerQueue.add(call.getCustomer());
+        }
+    }
+
+    @Override
     public void setup() {
         //Initialize the queues.
         customerQueue = new ArrayList<>();
@@ -20,7 +27,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
     }
 
     @Override
-    public String processMinute() {
+    public String processMinute(boolean callsLeft) {
         // First assign a taxi to each waiting customer as far as possible
         // Loop until there are no customers waiting anymore.
         // If there are no more ready taxis, the remaining customers will have to wait
@@ -54,32 +61,14 @@ public class Algorithm_SimpleQueue extends Algorithm {
         return output;
     }
 
-    /**
-     * Reads one line of input and processes it
-     */
-    private void readInput() {
-        //TODO Adapt for getting call list
-
-        /*if (scanner.hasNextLine()) {
-            String[] input = scanner.nextLine().split(" ");
-
-            int amountOfCalls = Integer.parseInt(input[0]);
-            for (int i = 0; i < amountOfCalls; i++) {
-                //Read in each new customer and add the customer to the waiting queue
-                Vertex position = graph.getVertex(Integer.parseInt(input[i * 2 + 1]));
-                Vertex destination = graph.getVertex(Integer.parseInt(input[i * 2 + 2]));
-                customerQueue.add(new Customer(position, destination));
-            }
-        }*/
-    }
-
     @Override
     public void haltExecution() {
 
     }
 
     @Override
-    public void continueExecution() {
+    public void continueExecution(int uptoMinute) {
+        //fixme not sure how to check which taxi is going towards a destination yet.
 
     }
 }
