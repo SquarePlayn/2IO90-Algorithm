@@ -8,6 +8,13 @@
     <artifactId>algorithm</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <parent>
+        <groupId>dbl-algorithms</groupId>
+        <artifactId>interpreter</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../2IO90-Interpreter/pom.xml</relativePath>
+    </parent>
+
     <build>
         <defaultGoal>clean package</defaultGoal>
         <resources>
