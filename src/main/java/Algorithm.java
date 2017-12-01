@@ -2,37 +2,44 @@
  * Abstract class framework for algorithm that can produce the output for a minute.
  */
 public abstract class Algorithm {
-    private int lastUpdatedMinute = -1;
-    private boolean isInitialized = false;
+    protected int lastUpdatedMinute = -1;
+    protected boolean isInitialized = false;
+
+    protected SharedData sharedData;
 
     /**
-     * Called by decision maker. Does general initialization of an algorithm and calls the {@link Algorithm#setup}
+     * Called by Scheduler. Does general initialization of an algorithm and calls the {@link Algorithm#setup}
      * method. Should only be called once in the entire execution of the entire program.
      */
-    public void initialize() {
+    public void initialize(SharedData sharedData) {
         if (isInitialized) {
             return;
         }
 
-        isInitialized = true;
+        this.sharedData = sharedData;
+        this.isInitialized = true;
 
         setup();
     }
 
     /**
-     * Called by main minute loop / decision maker, to advance one minute.
+     * Called by main minute loop / Scheduler, to advance one minute.
      * @return Output for this minute.
+     * @param callsLeft
      */
-    public String advanceMinute() {
+    public String advanceMinute(boolean callsLeft) {
         String output = processMinute();
 
         lastUpdatedMinute++;
+
+        output += "c";
 
         return output;
     }
 
     /**
      * Abstract function the algorithm will use to setup its dependencies it only needs to create once.
+     * Do NOT include trailing 'c', but DO include a space at the end if you made any moves!
      */
     public abstract void setup();
 
@@ -43,12 +50,12 @@ public abstract class Algorithm {
     public abstract String processMinute();
 
     /**
-     * Called by decision maker to signal when this algorithm is put in halt.
+     * Called by scheduler to signal when this algorithm is put in halt.
      */
     public abstract void haltExecution();
 
     /**
-     * Called by decision maker to signal when this algorithm resumes execution, after this algorithm has missed some
+     * Called by scheduler to signal when this algorithm resumes execution, after this algorithm has missed some
      * minutes.
      */
     public abstract void continueExecution();
