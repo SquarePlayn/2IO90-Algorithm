@@ -31,7 +31,7 @@ public class Scheduler {
         //Read over all test case info without delivering people
         initializeTaxis(); //TODO Might consider doing a simpler taxi initializer such as always random at this position
         for (int i = 1; i < Preamble.testMinutes; i++) {
-            Main.debug("Starting minute "+i);
+            Main.debug("Starting testMinute "+i);
             scanner.nextLine();
             scanner.println("c");
         }
@@ -55,6 +55,8 @@ public class Scheduler {
             readInput();
             advanceMinute(true);
         }
+
+        Main.debug("No more call minutes to be read, time to complete delivering everyone");
 
         //Since there are no more lines to read, advance until all customers are delivered
         while (!sharedData.getCustomerList().isEmpty()) {
@@ -80,6 +82,8 @@ public class Scheduler {
             Main.debug("Scheduler tried to read line while there is none.");
             return;
         }
+
+        Main.debug("Reading input for minute "+currentMinute);
 
         String[] input = scanner.nextLine().split(" ");
         Minute minute = new Minute();

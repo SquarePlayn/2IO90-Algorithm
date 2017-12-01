@@ -74,21 +74,23 @@ public class Graph {
 
     /**
      * Get all vertices that make up the shortest path from "from" to "to".
-     * The vertices will be in the correct order with 0 == from and len(path)-1 == to
+     * The vertices will be in the correct order with 0 == one after from and len(path)-1 == to
      * @param from the vertex to start your path from
      * @param to the vertex where your path will lead to
      * @return a list of all vertices which you will travel over to get from "from" to "to" in as short as possible
+     * excluding the FROM vertex, but including the TO vertex
      */
     public ArrayList<Vertex> getShortestPath(Vertex from, Vertex to) {
         ArrayList<Vertex> path = new ArrayList<Vertex>();
-        Vertex next = from;
         bfs(to); //Run the BFS algorithm to store the next vertex to go to in each node with regards to our destination
 
+        Vertex next = from.bfsFrom;
         //Check each node for which node would be the next one until we have arrived at the destination
         while(next != null){
             path.add(next);
             next = next.bfsFrom;
         }
+
         return path;
     }
 
