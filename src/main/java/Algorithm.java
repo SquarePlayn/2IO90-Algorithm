@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Abstract class framework for algorithm that can produce the output for a minute.
@@ -52,7 +53,6 @@ public abstract class Algorithm {
 
     /**
      * Abstract function the algorithm will use to setup its dependencies it only needs to create once.
-     * Do NOT include trailing 'c', but DO include a space at the end if you made any moves!
      */
     public abstract void setup();
 
@@ -68,12 +68,23 @@ public abstract class Algorithm {
     public abstract void haltExecution();
 
     /**
+     * Should return true for all AlgoVars that are updated by this algorithm.
+     * @param var
+     * @return
+     */
+    public abstract boolean doesUpdate(AlgoVar var);
+
+    /**
      * Called by scheduler to signal when this algorithm resumes execution, after this algorithm has missed some
      * minutes.
      */
-    public abstract void continueExecution(int upToMinute);
+    public abstract void continueExecution(int upToMinute, HashMap<AlgoVar, Integer> lastUpdated);
 
     public boolean isInitialized() {
         return isInitialized;
+    }
+
+    public enum AlgoVar {
+        TAXI_CUSTOMER, TAXI_IN_OPERATION, TAXI_PATH;
     }
 }

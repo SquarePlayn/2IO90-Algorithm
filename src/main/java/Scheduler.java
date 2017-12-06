@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Scheduler {
 
@@ -6,6 +7,8 @@ public class Scheduler {
 
     private TaxiScanner scanner;
     private SharedData sharedData;
+
+    private HashMap<Algorithm.AlgoVar, Integer> lastUpdatedVariables;// Keeps track of when a variable was last updated.
 
     private AlgorithmType activeAlgorithm;
 
@@ -68,6 +71,9 @@ public class Scheduler {
         }
     }
 
+    /**
+     * Determines whether a new algorithm should be scheduled.
+     */
     private void reschedule() {
         //TODO Add something better
         activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
@@ -76,6 +82,7 @@ public class Scheduler {
             activeAlgorithm.getAlgorithm().initialize(sharedData);
         }
 
+        // TODO on switching algo make sure to update lastUpdatedVariables.
     }
 
     /**
@@ -138,12 +145,18 @@ public class Scheduler {
         sharedData.getIOHistory().getMinute(currentMinute).setMoves(moves);
     }
 
+    /**
+     * Prints the output of the given minute to the scanner.
+     * @param minute The minute to output.
+     */
     public void outputMinute(int minute) {
         StringBuilder output = new StringBuilder();
-        for(Move move: sharedData.getIOHistory().getMinute(currentMinute).getMoves()) {
+
+        for(Move move: sharedData.getIOHistory().getMinute(minute).getMoves()) {
             output.append(move.getString());
 
         }
+
         output.append("c");
         scanner.println(output.toString());
 

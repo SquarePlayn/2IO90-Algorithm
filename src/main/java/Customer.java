@@ -11,6 +11,10 @@ public class Customer {
         this.destination = destination;
     }
 
+    public void updatePosition(Vertex position) {
+        this.position = position;
+    }
+
     public Vertex getPosition() {
         return position;
     }

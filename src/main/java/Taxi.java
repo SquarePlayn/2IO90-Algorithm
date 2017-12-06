@@ -2,16 +2,16 @@ import java.util.ArrayList;
 
 public class Taxi {
 
-    private static int MAX_CAPACITY;
+    public static int MAX_CAPACITY;
 
     private int id;
     private Vertex position;
     private ArrayList<Customer> passengers;
 
     // Needed for ALGO SimpleQueue
-    private Customer customer;
-    private boolean inOperation;
-    private ArrayList<Vertex> path;
+    private Customer customer; // Which customer we're on our way to pick up.
+    private boolean inOperation; // Is doing something
+    private ArrayList<Vertex> path; // Either the path towards the customer or the goal, depending on current state.
 
     public Taxi(int id) {
         this.id = id;
@@ -23,12 +23,16 @@ public class Taxi {
         MAX_CAPACITY = maxCapacity;
     }
 
+    public boolean isFull() {
+        return passengers.size() >= MAX_CAPACITY;
+    }
+
     public int getId() {
         return id;
     }
 
     public int getOutputId() {
-        return id+1;
+        return id + 1;
     }
 
     public void setPosition(Vertex position) {

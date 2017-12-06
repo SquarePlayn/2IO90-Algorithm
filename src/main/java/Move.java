@@ -6,12 +6,25 @@ public class Move {
     private Vertex node; // In case of move
     private Customer customer; // In case of drop or pickup
 
-    public Move(char action, Taxi taxi, Vertex node) {
-        this.action = action;
+    /**
+     * A move is defined as one part of the output. This creates a new travel operation for a taxi.
+     *
+     * @param taxi The taxi to move.
+     * @param node The neighboring node to move to.
+     */
+    public Move(Taxi taxi, Vertex node) {
+        this.action = 'm';
         this.taxi = taxi;
         this.node = node;
     }
 
+    /**
+     * A move is defined as one part of the output. This creates a new pickup or dropoff operation.
+     *
+     * @param action 'p' for pickup, 'd' for dropoff.
+     * @param taxi The taxi in question.
+     * @param customer The customer in question.
+     */
     public Move(char action, Taxi taxi, Customer customer) {
         this.action = action;
         this.taxi = taxi;

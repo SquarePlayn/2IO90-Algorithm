@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Algorithm_SimpleQueue extends Algorithm {
 
@@ -71,6 +72,13 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
     }
 
+    @Override
+    public boolean doesUpdate(AlgoVar var) {
+        return var == AlgoVar.TAXI_CUSTOMER ||
+                var == AlgoVar.TAXI_IN_OPERATION ||
+                var == AlgoVar.TAXI_PATH;
+    }
+
     public ArrayList<Move> advanceTaxi(Taxi taxi) {
         //Sanitycheck if we are indeed in operation
 
@@ -80,7 +88,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
             if (!taxi.getPath().isEmpty()) {
 
                 //We are still driving. Advance to next spot
-                output.add(new Move('m', taxi, taxi.getPath().remove(0)));
+                output.add(new Move(taxi, taxi.getPath().remove(0)));
 
             } else {
                 if (taxi.getPassengers().isEmpty()) {
@@ -104,7 +112,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
     }
 
-    public void processMoves(ArrayList<Move> moves) {
+    private void processMoves(ArrayList<Move> moves) {
 
         //TODO Check if moving the processing to in here doesn't drastically increase run time, since (very) rough testing seemed like about a 10% increase
 
@@ -144,14 +152,18 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
 
     @Override
-    public void continueExecution(int uptoMinute) {
+    public void continueExecution(int uptoMinute, HashMap<AlgoVar, Integer> lastUpdated) {
         //fixme not sure how to check which taxi is going towards a destination yet.
 
-        for(int i=lastUpdatedMinute+1; i<uptoMinute; i++) {
+        // TODO use lastUpdated.
+
+        for (int i = lastUpdatedMinute + 1; i < uptoMinute; i++) {
             Minute minute = sharedData.getIOHistory().getMinute(i);
             readMinute(minute.getCalls());
             processMoves(minute.getMoves());
+            lastUpdatedMinute++;
         }
 
+        // TODO Make sure amount of passengers is maximum one.
     }
 }
