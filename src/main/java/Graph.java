@@ -5,7 +5,7 @@ public class Graph {
     private ArrayList<Vertex> vertices;
 
     Graph() {
-        vertices = new ArrayList<Vertex>();
+        this.vertices = new ArrayList<>();
     }
 
     /**
@@ -68,8 +68,7 @@ public class Graph {
      * @return Length of shortest path between from and to
      */
     public int getDistance(Vertex from, Vertex to) {
-        bfs(to); //Run the BFS algorithm to store the distances in each node with regards to our destination
-        return from.bfsDistance; //Return how far our start is from our destination
+        return from.getDistanceTo(to); //Return how far our start is from our destination
     }
 
     /**
@@ -82,67 +81,16 @@ public class Graph {
      */
     public ArrayList<Vertex> getShortestPath(Vertex from, Vertex to) {
         ArrayList<Vertex> path = new ArrayList<Vertex>();
-        bfs(to); //Run the BFS algorithm to store the next vertex to go to in each node with regards to our destination
 
-        Vertex next = from.bfsFrom;
+        Vertex next = from.getNextTowards(to);
+
         //Check each node for which node would be the next one until we have arrived at the destination
         while(next != null){
             path.add(next);
-            next = next.bfsFrom;
+            next = next.getNextTowards(to);
         }
 
         return path;
-    }
-
-    /**
-     * Implementation of Breadth First Search
-     * When ran, it sets in each vertice the minimal distance to the "start" node,
-     *  as well as the next node to go to when you want to get to this "start" node as quick as possible.
-     * Runs in an expanding fashion: First explore 1 layer, then another and so forth untill the entire
-     *  graph has been visited
-     * Erases/overwrites any BSF results of earlier calls
-     * @param start Vertex to execute the BFS relative to (distance to / shortest path towards)
-     */
-    public void bfs(Vertex start) {
-
-        //Reset all bfs values of earlier BFS calls
-        for(Vertex vertex: vertices) {
-            vertex.bfsDistance = Integer.MAX_VALUE;
-            vertex.bfsFrom = null;
-        }
-
-        //Make an empty queue and array to keep track of which vertices we have already visited.
-        ArrayList<Vertex> queue = new ArrayList<Vertex>();
-        boolean visited[] = new boolean[getSize()];
-
-        //Start with the start. Since we have added it now, set visited to true.
-        visited[start.getId()] = true;
-        queue.add(start);
-
-        //Now make sure we empty the whole queue, resulting on going over each vertice in the connected graph
-        while(!queue.isEmpty()) {
-            //Pop the item that is first up
-            Vertex now = queue.get(0);
-            queue.remove(0);
-
-            //For each connection:
-            for(Vertex towards: now.getNeigbours()) {
-                if(!visited[towards.getId()]) {
-                    //If we have not yet done anything with this node, we have not seen it before
-                    //That means that we have now taken the shortest route to it. So the distance is 1 greater
-                    // than the distance to the node we are considering, and the shortest path back is trough the node
-                    // that we are considering.
-                    //Also add it to the (end of the) queue to traverse further
-                    visited[towards.getId()] = true;
-                    queue.add(towards);
-                    towards.bfsFrom = now;
-                    towards.bfsDistance = now.bfsDistance + 1;
-                }
-            }
-        }
-
-
-
     }
 
 }

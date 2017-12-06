@@ -5,6 +5,7 @@ public class Preamble {
     public static int amountOfTaxis; //The amount of taxis allowed to be existent in our graph
     public static int testMinutes; // The amount of minutes the test call list will take
     public static int callMinutes; // the amount of minutes in the total call list (including the testMinutes)
+    public static int graphSize; // The amount of nodes in the graph
 
     public static Graph graph;
 
@@ -32,7 +33,8 @@ public class Preamble {
         amountOfTaxis = Integer.parseInt(taxiLineSplit[0]); // process x - amount of taxis
         Taxi.setMaxCapacity(Integer.parseInt(taxiLineSplit[1])); // process c - max taxi capacity
 
-        graph.addVertices(Integer.parseInt(scanner.nextLine())); // Line 5: number n of nodes in the network
+        graphSize = Integer.parseInt(scanner.nextLine()); // Line 5: number n of nodes in the network
+        graph.addVertices(graphSize);
 
         createEdges(); //Read all edge lines and put them into the graph
 
