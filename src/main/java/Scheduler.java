@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class Scheduler {
 
     //ENUMS of the different algorithms
@@ -54,6 +56,7 @@ public class Scheduler {
         while (scanner.hasNextLine()) {
             readInput();
             advanceMinute(true);
+            outputMinute(currentMinute);
         }
 
         Main.debug("No more call minutes to be read, time to complete delivering everyone");
@@ -61,6 +64,7 @@ public class Scheduler {
         //Since there are no more lines to read, advance until all customers are delivered
         while (!sharedData.getCustomerList().isEmpty()) {
             advanceMinute(false);
+            outputMinute(currentMinute);
         }
     }
 
@@ -85,26 +89,8 @@ public class Scheduler {
 
         Main.debug("Reading input for minute "+currentMinute);
 
-        String[] input = scanner.nextLine().split(" ");
-        Minute minute = new Minute();
-
-        //Check each call
-        int amountOfCalls = Integer.parseInt(input[0]);
-        for (int i = 0; i < amountOfCalls; i++) {
-            //Read in each new customer
-            Vertex position = sharedData.getGraph().getVertex(Integer.parseInt(input[i * 2 + 1]));
-            Vertex destination = sharedData.getGraph().getVertex(Integer.parseInt(input[i * 2 + 2]));
-            Customer customer = new Customer(position, destination);
-
-            //Add the new customer to the customers
-            sharedData.getCustomerList().add(customer);
-
-            //Add the new call to the current minute we're constructing
-            minute.add(new Call(customer, position, destination));
-        }
-
-        //Add the minute to the minutes
-        sharedData.getCallList().addMinute(minute);
+        String input = scanner.nextLine();
+        sharedData.getIOHistory().readMinute(input, currentMinute, sharedData);
     }
 
     /**
@@ -113,6 +99,7 @@ public class Scheduler {
      */
     public void initializeTaxis() {
         //TODO Handle different taxi initialize options like we handle different advance minute options
+        //TODO Set to use IOHistory
         Main.debug("Starting initialize taxis");
 
         String output = initializeTaxis_random();
@@ -147,8 +134,18 @@ public class Scheduler {
      * @param callsLeft if there is still a call that has to be processed (if false we thus won't get any new customers anymore)
      */
     public void advanceMinute(boolean callsLeft) {
-        String output = activeAlgorithm.getAlgorithm().advanceMinute(callsLeft, currentMinute);
-        scanner.println(output);
+        ArrayList<Move> moves = activeAlgorithm.getAlgorithm().advanceMinute(callsLeft, currentMinute);
+        sharedData.getIOHistory().getMinute(currentMinute).setMoves(moves);
+    }
+
+    public void outputMinute(int minute) {
+        StringBuilder output = new StringBuilder();
+        for(Move move: sharedData.getIOHistory().getMinute(currentMinute).getMoves()) {
+            output.append(move.getString());
+
+        }
+        output.append("c");
+        scanner.println(output.toString());
 
         //We have advanced a minute, go to next
         currentMinute++;

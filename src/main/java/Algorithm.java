@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 /**
  * Abstract class framework for algorithm that can produce the output for a minute.
  */
@@ -24,30 +26,29 @@ public abstract class Algorithm {
 
     /**
      * Called by main minute loop / Scheduler, to advance one minute.
+     * initialize shall have been called before this (but only once in the entire execution of the program)
      * @return Output for this minute.
-     * @param callsLeft
+     * @param callsLeft states if there are calls left to be read (false = when we deliver all current customers, we're done)
      */
-    public String advanceMinute(boolean callsLeft, int minuteNumber) {
+    public ArrayList<Move> advanceMinute(boolean callsLeft, int minuteNumber) {
 
         //If there was a call list left this minute, read it
         if(callsLeft) {
-            readMinute(sharedData.getCallList().getMinute(minuteNumber));
+            readMinute(sharedData.getIOHistory().getMinute(minuteNumber).getCalls());
         }
 
-        String output = processMinute(callsLeft);
+        ArrayList<Move> output = processMinute(callsLeft);
 
         lastUpdatedMinute++;
-
-        output += "c";
 
         return output;
     }
 
     /**
      * Process the data for the minute that was given.
-     * @param minute the minute to be processed. Note the minutes should be processed in ascending order
+     * @param calls The arrayList of calls to be processed/read
      */
-    public abstract void readMinute(Minute minute);
+    public abstract void readMinute(ArrayList<Call> calls);
 
     /**
      * Abstract function the algorithm will use to setup its dependencies it only needs to create once.
@@ -59,7 +60,7 @@ public abstract class Algorithm {
      * Implemented by each algorithm to specify the output for each minute.
      * @return Output for this minute.
      */
-    public abstract String processMinute(boolean callsLeft);
+    public abstract ArrayList<Move> processMinute(boolean callsLeft);
 
     /**
      * Called by scheduler to signal when this algorithm is put in halt.

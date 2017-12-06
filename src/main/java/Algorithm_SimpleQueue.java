@@ -9,8 +9,8 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
 
     @Override
-    public void readMinute(Minute minute) {
-        for (Call call: minute) {
+    public void readMinute(ArrayList<Call> calls) {
+        for (Call call: calls) {
             customerQueue.add(call.getCustomer());
         }
     }
@@ -27,7 +27,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
     }
 
     @Override
-    public String processMinute(boolean callsLeft) {
+    public ArrayList<Move> processMinute(boolean callsLeft) {
         // First assign a taxi to each waiting customer as far as possible
         // Loop until there are no customers waiting anymore.
         // If there are no more ready taxis, the remaining customers will have to wait
@@ -45,11 +45,12 @@ public class Algorithm_SimpleQueue extends Algorithm {
             taxi.setInOperation(true);
         }
 
+
         // Advance all taxis that have an operation
-        StringBuilder output = new StringBuilder();
+        ArrayList<Move> output = new ArrayList<>();
         for (int i=0; i<taxiInOperationList.size(); i++) {
             Taxi taxi = taxiInOperationList.get(i);
-            output.append(advanceTaxi(taxi));
+            output.addAll(advanceTaxi(taxi));
 
             if (!taxi.getInOperation()) {
                 // If the taxi is now done delivering its client, we can put it back in the queue
@@ -59,7 +60,10 @@ public class Algorithm_SimpleQueue extends Algorithm {
             }
         }
 
-        return output.toString();
+        //Make sure the info stays updated before we go back
+        processMoves(output);
+
+        return output;
     }
 
     @Override
@@ -67,55 +71,87 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
     }
 
-    public String advanceTaxi(Taxi taxi) {
+    public ArrayList<Move> advanceTaxi(Taxi taxi) {
         //Sanitycheck if we are indeed in operation
 
-        if(!taxi.getInOperation()) {
-            return "";
+        ArrayList<Move> output = new ArrayList<>();
+
+        if(taxi.getInOperation()) {
+            if (!taxi.getPath().isEmpty()) {
+
+                //We are still driving. Advance to next spot
+                output.add(new Move('m', taxi, taxi.getPath().remove(0)));
+
+            } else {
+                if (taxi.getPassengers().isEmpty()) {
+                    //We still have to pick up the passenger
+
+                    //TODO Sanitycheck if customer is indeed at the position we are at
+                    //TODO Sanitycheck if first node is actually correct
+
+                    output.add(new Move('p', taxi, taxi.getCustomer()));
+
+                } else {
+                    //We are done driving, and have already picked up our customer, so that means we are at the destination
+                    // so we can drop the customer of
+
+                    output.add(new Move('d',taxi, taxi.getCustomer()));
+                }
+            }
         }
 
-        if (!taxi.getPath().isEmpty()) {
-            //We are still driving. Advance to next spot
-            taxi.setPosition(taxi.getPath().get(0));
-            taxi.getPath().remove(0);
+        return output;
 
-            return "m " + taxi.getOutputId() + " " + taxi.getPosition().getId() + " ";
+    }
 
-        } else {
-            if (taxi.getPassengers().isEmpty()) {
-                //We still have to pick up the passenger
+    public void processMoves(ArrayList<Move> moves) {
 
-                //TODO Sanitycheck if customer is indeed at the position we are at
+        //TODO Check if moving the processing to in here doesn't drastically increase run time, since (very) rough testing seemed like about a 10% increase
 
-                taxi.getPassengers().add(taxi.getCustomer());
+        for(Move move: moves) {
+            char action = move.getAction();
+            Taxi taxi = move.getTaxi();
+
+            if(action == 'm') {
+
+                //Moving to another node
+                taxi.setPosition(move.getNode());
+
+            } else if(action == 'p') {
+                Customer customer = move.getCustomer();
+
+                //Picking up a passenger
+                taxi.getPassengers().add(customer);
 
                 //Since we have somewhere to go, we are in operation
                 taxi.setInOperation(true);
-                taxi.setPath(sharedData.getGraph().getShortestPath(taxi.getPosition(), taxi.getCustomer().getDestination()));
+                taxi.setPath(sharedData.getGraph().getShortestPath(taxi.getPosition(), customer.getDestination()));
 
-                //TODO Sanitycheck if first node is actually correct
+            } else if(action == 'd') {
+                Customer customer = move.getCustomer();
 
-                return "p " + taxi.getOutputId() + " " + taxi.getCustomer().getDestination().getId() + " ";
-
-            } else {
-                //We are done driving, and have already picked up our customer, so that means we are at the destination
-                // so we can drop the customer of
-                taxi.getPassengers().remove(taxi.getCustomer());
+                //Dropping off a passenger
+                taxi.getPassengers().remove(customer);
                 taxi.setInOperation(false);
 
+                //We have delivered our customer, let's drop him
                 sharedData.getCustomerList().remove(taxi.getCustomer());
                 taxi.setCustomer(null);
-
-                return "d " + taxi.getOutputId() + " " + taxi.getPosition().getId() + " ";
-
             }
         }
+
     }
 
 
     @Override
     public void continueExecution(int uptoMinute) {
         //fixme not sure how to check which taxi is going towards a destination yet.
+
+        for(int i=lastUpdatedMinute+1; i<uptoMinute; i++) {
+            Minute minute = sharedData.getIOHistory().getMinute(i);
+            readMinute(minute.getCalls());
+            processMoves(minute.getMoves());
+        }
 
     }
 }

@@ -4,7 +4,7 @@ public class SharedData {
 
     private ArrayList<Taxi> taxiList = new ArrayList<>();
     private ArrayList<Customer> customerList = new ArrayList<>();
-    private CallList callList = new CallList();
+    private IOHistory iOHistory = new IOHistory();
     private Graph graph;
 
     public SharedData(Graph graph) {
@@ -23,7 +23,7 @@ public class SharedData {
         return graph;
     }
 
-    public CallList getCallList() {
-        return callList;
+    public IOHistory getIOHistory() {
+        return iOHistory;
     }
 }
