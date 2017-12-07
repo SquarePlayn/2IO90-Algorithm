@@ -25,33 +25,38 @@ public class Algorithm_GCC extends Algorithm {
     public ArrayList<Move> processMinute(boolean callsLeft) {
         ArrayList<Move> minute = new ArrayList<>();
 
+        for(Customer customer : customerQueue) {
+            //For each customer that is outside, init to be waiting
+            customer.setBeingHandled(false);
+        }
+
         for (Taxi taxi : sharedData.getTaxiList()) {
-            if (!taxi.getInOperation()) {
-                if (customerQueue.isEmpty()) {
+
+            if (taxi.getPassengers().isEmpty()) {
+                //Empty taxi, we must pick someone up
+                Customer closestCustomer = findClosestCustomer(taxi);
+
+                if(closestCustomer == null) {
+                    //Nobody to pickup, this taxi has nothing to do so lets wait
                     continue;
                 }
 
-                // Go the the closest customer.
-                Customer closest = findClosestCustomer(taxi);
+                if(!closestCustomer.getPosition().equals(taxi.getPosition())) {
+                    //There's no customer at our position
 
-                taxi.setInOperation(true);
-                taxi.setCustomer(closest);
-
-                customerQueue.remove(closest);
-            }
-            // Taxi definitely in operation.
-
-            if (taxi.getPassengers().isEmpty()) {
-                if (taxi.getPosition().equals(taxi.getCustomer().getPosition())) {
-                    minute.add(new Move('p', taxi, taxi.getCustomer()));
-                } else {
-                    Vertex next = taxi.getPosition().getNextTowards(taxi.getCustomer().getPosition());
-
+                    //Go one towards the customer we chose to handle
+                    Vertex next = taxi.getPosition().getNextTowards(closestCustomer.getPosition());
                     minute.add(new Move(taxi, next));
+
+                    //Let other taxis know we've got this person covered
+                    closestCustomer.setBeingHandled(true);
+
+                    continue;
                 }
-                continue;
+                //If we get here, there's a customer at out position, let's go do our pickup and dropoff logic
             }
-            // Taxi has at least one passenger.
+
+            // Taxi has at least one passenger in our taxi or on our spot.
             addGccMoves(minute, taxi);
         }
 
@@ -65,11 +70,14 @@ public class Algorithm_GCC extends Algorithm {
         int shortestDistance = Integer.MAX_VALUE;
 
         for (Customer customer : customerQueue) {
-            int distance = sharedData.getGraph().getDistance(customer.getPosition(), taxi.getPosition());
+            if(!customer.isBeingHandled()) {
+                //If another taxi hasn't taken care of this customer yet (to prevent 2 taxis going to the same customer
+                int distance = sharedData.getGraph().getDistance(customer.getPosition(), taxi.getPosition());
 
-            if (distance < shortestDistance) {
-                closest = customer;
-                shortestDistance = distance;
+                if (distance < shortestDistance) {
+                    closest = customer;
+                    shortestDistance = distance;
+                }
             }
         }
 
@@ -80,23 +88,36 @@ public class Algorithm_GCC extends Algorithm {
         ArrayList<Customer> candidatePassengers = new ArrayList<>(taxi.getPassengers());
 
         List<Customer> outsidePassengers = customerQueue.stream()
-                .filter(c -> c.getPosition().equals(taxi.getPosition()))
+                .filter(c -> c.getPosition().equals(taxi.getPosition()) && !c.isBeingHandled())
                 .collect(Collectors.toList());
+        int c = 0;
+        for(Customer customer: outsidePassengers) { //TODO Remove these debugs
+            if(!customer.isBeingHandled()) {
+                c++;
+            }
+        }
 
         candidatePassengers.addAll(outsidePassengers);
 
         Vertex bestVertex = null;           // Connected graph -> always neighbor -> never null.
-        int bestScore = Integer.MAX_VALUE;
+        int bestScore = Integer.MIN_VALUE;
 
         for (Vertex neighbor : taxi.getPosition().getNeigbours()) {
             int score = 0;
 
             for (Customer customer : candidatePassengers) {
-                score += neighbor.getDistanceTo(customer.getPosition());
+                int oldDistance = customer.getDestination().getDistanceTo(taxi.getPosition());
+                int newDistance = customer.getDestination().getDistanceTo(neighbor);
+
+                if(newDistance < oldDistance) {
+                    score += 2;
+                } else if(newDistance == oldDistance) {
+                    score++;
+                }
             }
 
             // TODO if equal decide based on amount of dropoffs e.g.
-            if (score < bestScore) {
+            if (score > bestScore) {
                 bestScore = score;
                 bestVertex = neighbor;
             }
@@ -107,8 +128,8 @@ public class Algorithm_GCC extends Algorithm {
         int amountPassengers = taxi.getPassengers().size();
 
         for (Customer intaxi : taxi.getPassengers()) {
-            int oldDistance = taxi.getPosition().getDistanceTo(intaxi.getDestination());
-            int newDistance = bestVertex.getDistanceTo(intaxi.getDestination());
+            int oldDistance = intaxi.getDestination().getDistanceTo(taxi.getPosition());
+            int newDistance = intaxi.getDestination().getDistanceTo(bestVertex);
 
             if (newDistance > oldDistance) {
                 // Throw passenger out of our taxi.
@@ -119,18 +140,24 @@ public class Algorithm_GCC extends Algorithm {
         }
 
         for (Customer outside : outsidePassengers) {
+            if(outside.isBeingHandled()) {
+                //This customer is already being taken care of by another taxi
+                continue;
+            }
+
             if (amountPassengers >= Taxi.MAX_CAPACITY) {
                 break;
             }
 
-            int oldDistance = taxi.getPosition().getDistanceTo(outside.getDestination());
-            int newDistance = bestVertex.getDistanceTo(outside.getDestination());
+            int oldDistance = outside.getDestination().getDistanceTo(taxi.getPosition());
+            int newDistance = outside.getDestination().getDistanceTo(bestVertex);
 
             if (newDistance <= oldDistance) {
-                // Throw passenger out of our taxi.
+                // Pick up the passenger
                 mayMove = false;
                 minute.add(new Move('p', taxi, outside));
                 amountPassengers++;
+                outside.setBeingHandled(true);
             }
         }
 
@@ -146,8 +173,7 @@ public class Algorithm_GCC extends Algorithm {
 
     @Override
     public boolean doesUpdate(AlgoVar var) {
-        return var == AlgoVar.TAXI_CUSTOMER ||
-                var == AlgoVar.TAXI_IN_OPERATION;
+        return false;
     }
 
     @Override
@@ -179,22 +205,23 @@ public class Algorithm_GCC extends Algorithm {
                 //Picking up a passenger
                 taxi.getPassengers().add(customer);
 
-                //Since we have somewhere to go, we are in operation
-                taxi.setInOperation(true);
+                //Remove him from the people outside queue
+                customerQueue.remove(customer);
 
             } else if(action == 'd') {
                 Customer customer = move.getCustomer();
 
                 //Dropping off a passenger
                 taxi.getPassengers().remove(customer);
-                taxi.setInOperation(!taxi.getPassengers().isEmpty());
 
-                customer.updatePosition(taxi.getPosition());
-                customerQueue.add(customer);
-
-                //We have delivered our customer, let's drop him
-                sharedData.getCustomerList().remove(taxi.getCustomer());
-                taxi.setCustomer(null);
+                if(taxi.getPosition().equals(customer.getDestination())) {
+                    //We have delivered our customer, let's drop him
+                    sharedData.getCustomerList().remove(customer);
+                } else {
+                    //Customer is not yet at its destination
+                    customer.updatePosition(taxi.getPosition());
+                    customerQueue.add(customer);
+                }
             }
         }
 

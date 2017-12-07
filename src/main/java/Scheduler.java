@@ -76,7 +76,7 @@ public class Scheduler {
      */
     private void reschedule() {
         //TODO Add something better
-        activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
+        activeAlgorithm = AlgorithmType.GCC;
 
         if(!activeAlgorithm.getAlgorithm().isInitialized()){
             activeAlgorithm.getAlgorithm().initialize(sharedData);
