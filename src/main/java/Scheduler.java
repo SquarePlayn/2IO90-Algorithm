@@ -1,8 +1,8 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
 public class Scheduler {
-
     //ENUMS of the different algorithms
 
     private TaxiScanner scanner;
@@ -123,9 +123,10 @@ public class Scheduler {
     private String initializeTaxis_random() {
         Main.debug("Using the random() type of taxi distribution");
         StringBuilder output = new StringBuilder();
+        Random random = sharedData.getRandom();
 
         for (Taxi taxi : sharedData.getTaxiList()) {
-            taxi.setPosition(sharedData.getGraph().getVertex((int) (Math.random() * sharedData.getGraph().getSize())));
+            taxi.setPosition(sharedData.getGraph().getVertex(random.nextInt(sharedData.getGraph().getSize())));
             output.append("m ")
                     .append(taxi.getOutputId())
                     .append(" ")
