@@ -11,7 +11,7 @@ public class Algorithm_GCC extends Algorithm {
 
     @Override
     public void readMinute(ArrayList<Call> calls) {
-        for (Call call: calls) {
+        for (Call call : calls) {
             customerQueue.add(call.getCustomer());
         }
     }
@@ -25,23 +25,35 @@ public class Algorithm_GCC extends Algorithm {
     public ArrayList<Move> processMinute(boolean callsLeft) {
         ArrayList<Move> minute = new ArrayList<>();
 
-        for(Customer customer : customerQueue) {
+        for (Customer customer : customerQueue) {
             //For each customer that is outside, init to be waiting
             customer.setBeingHandled(false);
         }
 
         for (Taxi taxi : sharedData.getTaxiList()) {
 
+            // TODO BEGIN REMOVE
+            for (Taxi test : sharedData.getTaxiList()) {
+                if (test.equals(taxi)) {
+                    continue;
+                }
+
+                if (test.getPosition().getDistanceTo(taxi.getPosition()) <= 3) {
+                    Main.debug("2 taxis within range 3.");
+                }
+            }
+            // TODO END REMOVE
+
             if (taxi.getPassengers().isEmpty()) {
                 //Empty taxi, we must pick someone up
                 Customer closestCustomer = findClosestCustomer(taxi);
 
-                if(closestCustomer == null) {
+                if (closestCustomer == null) {
                     //Nobody to pickup, this taxi has nothing to do so lets wait
                     continue;
                 }
 
-                if(!closestCustomer.getPosition().equals(taxi.getPosition())) {
+                if (!closestCustomer.getPosition().equals(taxi.getPosition())) {
                     //There's no customer at our position
 
                     //Go one towards the customer we chose to handle
@@ -70,7 +82,7 @@ public class Algorithm_GCC extends Algorithm {
         int shortestDistance = Integer.MAX_VALUE;
 
         for (Customer customer : customerQueue) {
-            if(!customer.isBeingHandled()) {
+            if (!customer.isBeingHandled()) {
                 //If another taxi hasn't taken care of this customer yet (to prevent 2 taxis going to the same customer
                 int distance = sharedData.getGraph().getDistance(customer.getPosition(), taxi.getPosition());
 
@@ -90,12 +102,6 @@ public class Algorithm_GCC extends Algorithm {
         List<Customer> outsidePassengers = customerQueue.stream()
                 .filter(c -> c.getPosition().equals(taxi.getPosition()) && !c.isBeingHandled())
                 .collect(Collectors.toList());
-        int c = 0;
-        for(Customer customer: outsidePassengers) { //TODO Remove these debugs
-            if(!customer.isBeingHandled()) {
-                c++;
-            }
-        }
 
         candidatePassengers.addAll(outsidePassengers);
 
@@ -109,9 +115,9 @@ public class Algorithm_GCC extends Algorithm {
                 int oldDistance = customer.getDestination().getDistanceTo(taxi.getPosition());
                 int newDistance = customer.getDestination().getDistanceTo(neighbor);
 
-                if(newDistance < oldDistance) {
+                if (newDistance < oldDistance) {
                     score += 2;
-                } else if(newDistance == oldDistance) {
+                } else if (newDistance == oldDistance) {
                     score++;
                 }
             }
@@ -140,7 +146,7 @@ public class Algorithm_GCC extends Algorithm {
         }
 
         for (Customer outside : outsidePassengers) {
-            if(outside.isBeingHandled()) {
+            if (outside.isBeingHandled()) {
                 //This customer is already being taken care of by another taxi
                 continue;
             }
@@ -183,23 +189,24 @@ public class Algorithm_GCC extends Algorithm {
 
     /**
      * Process the output of a minute.
-     * @param moves
+     *
+     * @param moves The moves the algorithm did this move.
      */
     private void processMoves(ArrayList<Move> moves) {
 
         //TODO Check if moving the processing to in here doesn't drastically increase run time, since (very) rough
         // TODO testing seemed like about a 10% increase
 
-        for(Move move : moves) {
+        for (Move move : moves) {
             char action = move.getAction();
             Taxi taxi = move.getTaxi();
 
-            if(action == 'm') {
+            if (action == 'm') {
 
                 //Moving to another node
                 taxi.setPosition(move.getNode());
 
-            } else if(action == 'p') {
+            } else if (action == 'p') {
                 Customer customer = move.getCustomer();
 
                 //Picking up a passenger
@@ -208,13 +215,13 @@ public class Algorithm_GCC extends Algorithm {
                 //Remove him from the people outside queue
                 customerQueue.remove(customer);
 
-            } else if(action == 'd') {
+            } else if (action == 'd') {
                 Customer customer = move.getCustomer();
 
                 //Dropping off a passenger
                 taxi.getPassengers().remove(customer);
 
-                if(taxi.getPosition().equals(customer.getDestination())) {
+                if (taxi.getPosition().equals(customer.getDestination())) {
                     //We have delivered our customer, let's drop him
                     sharedData.getCustomerList().remove(customer);
                 } else {
