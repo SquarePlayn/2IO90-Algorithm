@@ -32,18 +32,6 @@ public class Algorithm_GCC extends Algorithm {
 
         for (Taxi taxi : sharedData.getTaxiList()) {
 
-            // TODO BEGIN REMOVE
-            for (Taxi test : sharedData.getTaxiList()) {
-                if (test.equals(taxi)) {
-                    continue;
-                }
-
-                if (test.getPosition().getDistanceTo(taxi.getPosition()) <= 3) {
-                    Main.debug("2 taxis within range 3.");
-                }
-            }
-            // TODO END REMOVE
-
             if (taxi.getPassengers().isEmpty()) {
                 //Empty taxi, we must pick someone up
                 Customer closestCustomer = findClosestCustomer(taxi);
