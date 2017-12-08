@@ -21,8 +21,20 @@ import java.util.function.Consumer;
  */
 public class TaxiScanner {
 
-    private static File inputFile;
+    /**
+     * This class is a singleton, hence a pointer to its own instance
+     */
     private static TaxiScanner instance = null;
+
+    /**
+     * Input file for the algorithm to process. Contains all test data (graph, taxi information, customers).
+     * This file is provided by the interpreter
+     */
+    private static File inputFile;
+    /**
+     * Indicates whether the algorithm should output to the console. Value provided by the interpreter
+     */
+    private static boolean outputToConsole = false;
 
     private State state;
     private int preambleLinesLeft;
@@ -37,20 +49,34 @@ public class TaxiScanner {
      * Constructor is private to ensure singleton behaviour.
      */
     private TaxiScanner(){
+
+        init();
+
+    }
+
+    /**
+     * Initialises all required variables for a new fresh run of the algorithm. An input stream is defined with the
+     * file, the state is set to initial and a new scanner is created.
+     *
+     * @return True if the init succeeded, false otherwise
+     */
+    public boolean init() {
         InputStream input = System.in;
 
+        // Create the input stream, if possible
         if (inputFile != null) {
             try {
-                System.out.println(inputFile.getAbsolutePath());
                 input = new FileInputStream(inputFile);
             } catch (FileNotFoundException e) {
                 System.out.println("Error while reading input file, using System.in.");
                 e.printStackTrace();
+                return false;
             }
         }
 
         state = State.INITIAL;
         scanner = new Scanner(input);
+        return true;
     }
 
     /**
@@ -59,6 +85,15 @@ public class TaxiScanner {
      */
     public static void setInputFile(File inputFile) {
         TaxiScanner.inputFile = inputFile;
+    }
+
+    /**
+     * Sets the variable that indicates whether the algorithm should output to the console or not
+     *
+     * @param outputToConsole True if should output to console, false otherwise
+     */
+    public static void setOutputToConsole(boolean outputToConsole) {
+        TaxiScanner.outputToConsole = outputToConsole;
     }
 
     /**
@@ -146,7 +181,10 @@ public class TaxiScanner {
             state = State.AWAITINGNEXTLINE;
         }
 
-        System.out.println(s);
+        // Only output to the console if this is desired
+        if (outputToConsole) {
+            System.out.println(s);
+        }
 
         if (outputReader != null) {
             outputReader.accept(s);
