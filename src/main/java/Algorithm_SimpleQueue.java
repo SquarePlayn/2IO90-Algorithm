@@ -129,7 +129,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
                 Customer customer = move.getCustomer();
 
                 //Picking up a passenger
-                taxi.getPassengers().add(customer);
+                taxi.addPassenger(customer);
 
                 //Since we have somewhere to go, we are in operation
                 taxi.setInOperation(true);
@@ -139,11 +139,8 @@ public class Algorithm_SimpleQueue extends Algorithm {
                 Customer customer = move.getCustomer();
 
                 //Dropping off a passenger
-                taxi.getPassengers().remove(customer);
+                taxi.removePassenger(sharedData.getCustomerList(), customer);
                 taxi.setInOperation(false);
-
-                //We have delivered our customer, let's drop him
-                sharedData.getCustomerList().remove(taxi.getCustomer());
                 taxi.setCustomer(null);
             }
         }

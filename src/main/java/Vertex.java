@@ -5,6 +5,8 @@ public class Vertex {
     //List all adjacent vertices
     private ArrayList<Vertex> connections;
     private int id;
+    private ArrayList<Customer> customers;
+    private ArrayList<Taxi> taxis;
 
     //Shortest path variables
     private boolean[] cached;
@@ -16,6 +18,9 @@ public class Vertex {
     public Vertex(int id) {
         this.id = id;
         connections = new ArrayList<>();
+
+        customers = new ArrayList<>();
+        taxis = new ArrayList<>();
 
         int amountOfNodes = Preamble.graphSize;
         cached = new boolean[amountOfNodes];
@@ -102,5 +107,31 @@ public class Vertex {
 
     public boolean getVisited(Vertex vertex) {
         return visited[vertex.getId()];
+    }
+
+    public ArrayList<Customer> getCustomers() {
+        return customers;
+    }
+
+    public ArrayList<Taxi> getTaxis() {
+        return taxis;
+    }
+
+    public Customer addCustomer(Customer customer) {
+        customers.add(customer);
+        return customer;
+    }
+
+    public Taxi addTaxi(Taxi taxi) {
+        taxis.add(taxi);
+        return taxi;
+    }
+
+    public boolean removeCustomer(Customer customer) {
+        return customers.remove(customer);
+    }
+
+    public boolean removeTaxi(Taxi taxi) {
+        return taxis.remove(taxi);
     }
 }

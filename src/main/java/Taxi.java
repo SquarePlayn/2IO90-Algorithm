@@ -36,7 +36,11 @@ public class Taxi {
     }
 
     public void setPosition(Vertex position) {
+        if(this.position != null) {
+            this.position.removeTaxi(this);
+        }
         this.position = position;
+        this.position.addTaxi(this);
     }
 
     public Vertex getPosition() {
@@ -45,6 +49,25 @@ public class Taxi {
 
     public ArrayList<Customer> getPassengers() {
         return passengers;
+    }
+
+    public boolean removePassenger(ArrayList<Customer> customerList, Customer customer) {
+        if(passengers.contains(customer)) {
+            customer.updatePosition(position);
+            customer.setTaxi(null);
+            if(customer.isAtDestination()) {
+                customerList.remove(customer);
+                customer.getPosition().removeCustomer(customer);
+            }
+        } else {
+            Main.debug("[ERROR] Tried removing a customer from taxi ("+getOutputId()+") that is not in the taxi!");
+        }
+        return passengers.remove(customer);
+    }
+
+    public void addPassenger(Customer customer) {
+        customer.setTaxi(this);
+        passengers.add(customer);
     }
 
     public void setId(int id) {
