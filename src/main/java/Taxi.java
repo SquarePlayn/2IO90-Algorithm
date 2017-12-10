@@ -19,6 +19,20 @@ public class Taxi {
         this.inOperation = false;
     }
 
+    public void pickup(Customer customer) {
+        customer.pickup(this);
+        passengers.add(customer);
+    }
+
+    public void drop(Customer customer, SharedData sharedData) {
+        customer.drop(position);
+        passengers.remove(customer);
+
+        if(customer.isAtDestination()) {
+            sharedData.getCustomerList().remove(customer);
+        }
+    }
+
     public static void setMaxCapacity(int maxCapacity) {
         MAX_CAPACITY = maxCapacity;
     }

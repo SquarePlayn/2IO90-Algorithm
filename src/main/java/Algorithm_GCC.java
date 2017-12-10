@@ -198,7 +198,7 @@ public class Algorithm_GCC extends Algorithm {
                 Customer customer = move.getCustomer();
 
                 //Picking up a passenger
-                taxi.getPassengers().add(customer);
+                taxi.pickup(customer);
 
                 //Remove him from the people outside queue
                 customerQueue.remove(customer);
@@ -207,14 +207,9 @@ public class Algorithm_GCC extends Algorithm {
                 Customer customer = move.getCustomer();
 
                 //Dropping off a passenger
-                taxi.getPassengers().remove(customer);
+                taxi.drop(customer, sharedData);
 
-                if (taxi.getPosition().equals(customer.getDestination())) {
-                    //We have delivered our customer, let's drop him
-                    sharedData.getCustomerList().remove(customer);
-                } else {
-                    //Customer is not yet at its destination
-                    customer.updatePosition(taxi.getPosition());
+                if (!customer.isAtDestination()) {
                     customerQueue.add(customer);
                 }
             }
