@@ -19,6 +19,7 @@ public class Customer {
         this.position = initialPosition;
         this.destination = destination;
         this.creationMinute = creationMinute;
+        this.position.addCustomer(this);
     }
 
     public void drop(Vertex position) {
@@ -73,11 +74,11 @@ public class Customer {
         this.hasBeenPickedUp = hasBeenPickedUp;
     }
 
-    public boolean isHasBeenPickedUp() {
+    public boolean getHasBeenPickedUp() {
         return hasBeenPickedUp;
     }
 
-    public boolean getHasBeenPickedUp() {
-        return hasBeenPickedUp;
+    public int getCreationMinute() {
+        return creationMinute;
     }
 }

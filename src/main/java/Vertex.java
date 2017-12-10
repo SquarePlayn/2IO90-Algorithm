@@ -1,13 +1,14 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Vertex {
 
-    //List all adjacent vertices
-    private ArrayList<Vertex> connections;
+    private ArrayList<Vertex> connections; //List all adjacent vertices
     private int id;
-    private ArrayList<Customer> customers;
-    private ArrayList<Taxi> taxis;
+
+    private HashSet<Customer> customers; //All customers outside on this spot
+    private HashSet<Taxi> taxis; //All taxis outside on this spot
 
     //Shortest path variables
     private HashMap<Integer, Integer> distanceTo;
@@ -19,12 +20,12 @@ public class Vertex {
         this.id = id;
         connections = new ArrayList<>();
 
-        customers = new ArrayList<>();
-        taxis = new ArrayList<>();
-
         distanceTo = new HashMap<>();
         nextTowards = new HashMap<>();
         visited = new HashMap<>();
+
+        customers = new HashSet<>();
+        taxis = new HashSet<>();
     }
 
     public void updateDistanceInfo(Vertex startedPoint, int distance, Vertex nextTowards) {
@@ -106,29 +107,27 @@ public class Vertex {
         return visited.getOrDefault(vertex.getId(), false);
     }
 
-    public ArrayList<Customer> getCustomers() {
+    public HashSet<Customer> getCustomers() {
         return customers;
     }
 
-    public ArrayList<Taxi> getTaxis() {
-        return taxis;
-    }
-
-    public Customer addCustomer(Customer customer) {
-        customers.add(customer);
-        return customer;
-    }
-
-    public Taxi addTaxi(Taxi taxi) {
-        taxis.add(taxi);
-        return taxi;
+    public boolean addCustomer(Customer customer) {
+        return getCustomers().add(customer);
     }
 
     public boolean removeCustomer(Customer customer) {
-        return customers.remove(customer);
+        return getCustomers().remove(customer);
+    }
+
+    public HashSet<Taxi> getTaxis() {
+        return taxis;
+    }
+
+    public boolean addTaxi(Taxi taxi) {
+        return getTaxis().add(taxi);
     }
 
     public boolean removeTaxi(Taxi taxi) {
-        return taxis.remove(taxi);
+        return  getTaxis().remove(taxi);
     }
 }
