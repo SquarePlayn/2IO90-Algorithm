@@ -14,9 +14,9 @@ import java.util.function.Consumer;
  * After that alternately:
  * 3. Commands are printed. When the last character of a string with commands is 'c', go to step 4.
  * 4. A single line is read. Go to step 3.
- *
+ * <p>
  * Deviating from this ordering will result in no action taken, and an exception being thrown.
- *
+ * <p>
  * Created by Noud de Kroon on 11/16/2016.
  */
 public class TaxiScanner {
@@ -48,7 +48,7 @@ public class TaxiScanner {
     /**
      * Constructor is private to ensure singleton behaviour.
      */
-    private TaxiScanner(){
+    private TaxiScanner() {
 
         init();
 
@@ -81,6 +81,7 @@ public class TaxiScanner {
 
     /**
      * Set the file to read as input, will use System.in when not set.
+     *
      * @param inputFile The file to read.
      */
     public static void setInputFile(File inputFile) {
@@ -98,6 +99,7 @@ public class TaxiScanner {
 
     /**
      * Retrieves the single instance of this class. Creates the instance on first call.
+     *
      * @return Singleton instance of TaxiScanner
      */
     public static TaxiScanner getInstance() {
@@ -117,20 +119,22 @@ public class TaxiScanner {
 
     /**
      * Check if input has a next line. Note: Does not check if reading the next line is actually correct ordering!
+     *
      * @return True if input remaining
      */
-    public boolean hasNextLine(){
+    public boolean hasNextLine() {
         return scanner.hasNextLine();
     }
 
     /**
      * Retrieve next line of input.
+     *
      * @return Next line of input
-     * @throws IllegalStateException if called when a print is expected by the ordering.
+     * @throws IllegalStateException  if called when a print is expected by the ordering.
      * @throws NoSuchElementException if !this.hasNextLine()
-     * @throws NumberFormatException if first line of input is not an integer
+     * @throws NumberFormatException  if first line of input is not an integer
      */
-    public String nextLine(){
+    public String nextLine() {
         if (!this.hasNextLine()) {
             throw new NoSuchElementException("No line remaining on input!");
         }
@@ -141,8 +145,7 @@ public class TaxiScanner {
             inputReader.accept(nextLine);
         }
 
-        switch(state)
-        {
+        switch (state) {
             case INITIAL:
                 try {
                     preambleLinesLeft = Integer.parseInt(nextLine);
@@ -169,10 +172,11 @@ public class TaxiScanner {
 
     /**
      * Prints line of output (i.e. commands for the taxi's).
+     *
      * @param s String to be printed. If last character is 'c', nextLine will become enabled.
      * @throws IllegalStateException if called when readLine is expected by the ordering.
      */
-    public void println(String s){
+    public void println(String s) {
         if (state != State.AWAITINGPRINT) {
             throw new IllegalStateException("Print called while not in AWAITINGPRINT state");
         }
@@ -190,5 +194,12 @@ public class TaxiScanner {
             outputReader.accept(s);
         }
 
+    }
+
+    /**
+     * Closes the scanner
+     */
+    public void finish() {
+        scanner.close();
     }
 }
