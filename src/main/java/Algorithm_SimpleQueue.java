@@ -112,8 +112,6 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
     private void processMoves(ArrayList<Move> moves) {
 
-        //TODO Check if moving the processing to in here doesn't drastically increase run time, since (very) rough testing seemed like about a 10% increase
-
         for(Move move: moves) {
             char action = move.getAction();
             Taxi taxi = move.getTaxi();

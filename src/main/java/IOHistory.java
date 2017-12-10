@@ -20,7 +20,6 @@ public class IOHistory {
 
     public void readMinute(String input, int minute, SharedData sharedData) {
         getMinute(minute).setCalls(input, sharedData);
-        //TODO Read input make minute
     }
 
     public void addMinute(Minute minute) {

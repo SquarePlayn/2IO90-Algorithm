@@ -3,9 +3,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Created by Marijn van der Horst on 6-12-2017.
- */
 public class Algorithm_GCC extends Algorithm {
     private ArrayList<Customer> customerQueue;
 
@@ -181,9 +178,6 @@ public class Algorithm_GCC extends Algorithm {
      * @param moves The moves the algorithm did this move.
      */
     private void processMoves(ArrayList<Move> moves) {
-
-        //TODO Check if moving the processing to in here doesn't drastically increase run time, since (very) rough
-        // TODO testing seemed like about a 10% increase
 
         for (Move move : moves) {
             char action = move.getAction();
