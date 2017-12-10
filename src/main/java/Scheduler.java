@@ -3,7 +3,7 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class Scheduler {
-    //ENUMS of the different algorithms
+    private static final int SHEDULE_CUTOFF = 1024;
 
     private TaxiScanner scanner;
     private SharedData sharedData;
@@ -76,7 +76,12 @@ public class Scheduler {
      */
     private void reschedule() {
         //TODO Add something better
-        activeAlgorithm = AlgorithmType.GCC;
+
+        if(sharedData.getGraph().getSize() > SHEDULE_CUTOFF) {
+            activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
+        } else {
+            activeAlgorithm = AlgorithmType.GCC;
+        }
 
         if(!activeAlgorithm.getAlgorithm().isInitialized()){
             activeAlgorithm.getAlgorithm().initialize(sharedData);

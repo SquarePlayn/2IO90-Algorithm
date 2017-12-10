@@ -1,12 +1,26 @@
 public enum AlgorithmType {
-    SIMPLEQUEUE (new Algorithm_SimpleQueue()),
-    GCC (new Algorithm_GCC());
 
-    private Algorithm algorithm;
+    SIMPLEQUEUE() {
+        @Override
+        public void reset() {
+            this.algorithm = new Algorithm_SimpleQueue();
+        }
+    },
 
-    AlgorithmType(Algorithm algorithm) {
-        this.algorithm = algorithm;
+    GCC() {
+        @Override
+        public void reset() {
+            this.algorithm = new Algorithm_GCC();
+        }
+    };
+
+    protected Algorithm algorithm;
+
+    AlgorithmType() {
+        this.reset();
     }
+
+    public abstract void reset();
 
     public Algorithm getAlgorithm() {
         return algorithm;

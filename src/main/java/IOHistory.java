@@ -5,11 +5,15 @@ import java.util.ArrayList;
  */
 public class IOHistory {
 
-    ArrayList<Minute> minutes = new ArrayList<>();
+    ArrayList<Minute> minutes;
+
+    public IOHistory() {
+        minutes = new ArrayList<>();
+    }
 
     public Minute getMinute(int number) {
         while(number >= minutes.size()) {
-            minutes.add(new Minute());
+            minutes.add(new Minute(minutes.size()));
         }
             return minutes.get(number);
     }

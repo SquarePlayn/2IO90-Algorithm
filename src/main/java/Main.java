@@ -36,4 +36,13 @@ public class Main {
 
     }
 
+    public static void reset() {
+
+        // Reset (create a new instance) each algorithm, this is required for the interpreter
+        for (AlgorithmType algorithmType : AlgorithmType.values()) {
+            algorithmType.reset();
+        }
+
+    }
+
 }

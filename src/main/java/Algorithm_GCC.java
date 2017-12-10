@@ -293,6 +293,9 @@ public class Algorithm_GCC extends Algorithm {
      */
     private void processMoves(ArrayList<Move> moves) {
 
+        //TODO Check if moving the processing to in here doesn't drastically increase run time, since (very) rough
+        // TODO testing seemed like about a 10% increase
+
         for (Move move : moves) {
             char action = move.getAction();
             Taxi taxi = move.getTaxi();
@@ -306,7 +309,7 @@ public class Algorithm_GCC extends Algorithm {
                 Customer customer = move.getCustomer();
 
                 //Picking up a passenger
-                taxi.addPassenger(customer);
+                taxi.pickup(customer, sharedData);
 
                 //Remove him from the people outside queue
                 customerQueue.remove(customer);
@@ -315,7 +318,7 @@ public class Algorithm_GCC extends Algorithm {
                 Customer customer = move.getCustomer();
 
                 //Dropping off a passenger
-                taxi.removePassenger(sharedData.getCustomerList(), customer);
+                taxi.drop(customer, sharedData);
 
                 if (!customer.isAtDestination()) {
                     customerQueue.add(customer);

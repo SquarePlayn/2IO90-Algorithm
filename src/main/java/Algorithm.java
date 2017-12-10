@@ -5,10 +5,15 @@ import java.util.HashMap;
  * Abstract class framework for algorithm that can produce the output for a minute.
  */
 public abstract class Algorithm {
-    protected int lastUpdatedMinute = -1;
-    protected boolean isInitialized = false;
+    protected int lastUpdatedMinute;
+    protected boolean isInitialized;
 
     protected SharedData sharedData;
+
+    public Algorithm() {
+        this.lastUpdatedMinute = -1;
+        this.isInitialized = false;
+    }
 
     /**
      * Called by Scheduler. Does general initialization of an algorithm and calls the {@link Algorithm#setup}

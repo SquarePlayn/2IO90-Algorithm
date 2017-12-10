@@ -3,11 +3,9 @@ import java.util.HashMap;
 
 public class Algorithm_SimpleQueue extends Algorithm {
 
-    
     private ArrayList<Customer> customerQueue;
     private ArrayList<Taxi> taxiReadyQueue;
     private ArrayList<Taxi> taxiInOperationList;
-
 
     @Override
     public void readMinute(ArrayList<Call> calls) {
@@ -129,7 +127,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
                 Customer customer = move.getCustomer();
 
                 //Picking up a passenger
-                taxi.addPassenger(customer);
+                taxi.pickup(customer, sharedData);
 
                 //Since we have somewhere to go, we are in operation
                 taxi.setInOperation(true);
@@ -139,7 +137,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
                 Customer customer = move.getCustomer();
 
                 //Dropping off a passenger
-                taxi.removePassenger(sharedData.getCustomerList(), customer);
+                taxi.drop(customer, sharedData);
                 taxi.setInOperation(false);
                 taxi.setCustomer(null);
             }

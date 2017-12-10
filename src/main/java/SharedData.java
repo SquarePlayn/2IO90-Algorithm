@@ -1,17 +1,26 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
 
 public class SharedData {
     private final long SEED = 12345678910L;
 
-    private Random random = new Random(SEED);
-    private ArrayList<Taxi> taxiList = new ArrayList<>();
-    private ArrayList<Customer> customerList = new ArrayList<>();
-    private IOHistory iOHistory = new IOHistory();
+    private Random random;
+    private ArrayList<Taxi> taxiList;
+    private HashSet<Customer> customerList;
+    private HashSet<Customer> customerOutsideList;
+    private HashSet<Customer> customerInTaxiList;
+    private IOHistory iOHistory;
     private Graph graph;
 
     public SharedData(Graph graph) {
         this.graph = graph;
+        this.random = new Random(SEED);
+        this.taxiList = new ArrayList<>();
+        this.customerList = new HashSet<>();
+        this.customerOutsideList = new HashSet<>();
+        this.customerInTaxiList = new HashSet<>();
+        this.iOHistory = new IOHistory();
     }
 
     public Random getRandom() {
@@ -22,8 +31,16 @@ public class SharedData {
         return taxiList;
     }
 
-    public ArrayList<Customer> getCustomerList() {
+    public HashSet<Customer> getCustomerList() {
         return customerList;
+    }
+
+    public HashSet<Customer> getCustomerOutsideList() {
+        return customerOutsideList;
+    }
+
+    public HashSet<Customer> getCustomerInTaxiList() {
+        return customerInTaxiList;
     }
 
     public Graph getGraph() {
