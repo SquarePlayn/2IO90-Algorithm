@@ -4,14 +4,18 @@ import java.util.Random;
 public class SharedData {
     private final long SEED = 12345678910L;
 
-    private Random random = new Random(SEED);
-    private ArrayList<Taxi> taxiList = new ArrayList<>();
-    private ArrayList<Customer> customerList = new ArrayList<>();
-    private IOHistory iOHistory = new IOHistory();
+    private Random random;
+    private ArrayList<Taxi> taxiList;
+    private ArrayList<Customer> customerList;
+    private IOHistory iOHistory;
     private Graph graph;
 
     public SharedData(Graph graph) {
         this.graph = graph;
+        this.random = new Random(SEED);
+        this.taxiList = new ArrayList<>();
+        this.customerList = new ArrayList<>();
+        this.iOHistory = new IOHistory();
     }
 
     public Random getRandom() {
