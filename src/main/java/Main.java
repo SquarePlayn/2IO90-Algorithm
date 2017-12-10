@@ -43,8 +43,6 @@ public class Main {
             algorithmType.reset();
         }
 
-        TaxiScanner.getInstance().finish();
-
     }
 
 }
