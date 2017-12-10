@@ -39,8 +39,9 @@ public class Main {
     public static void reset() {
 
         // Reset (create a new instance) each algorithm, this is required for the interpreter
-        AlgorithmType.SIMPLEQUEUE.reset();
-        AlgorithmType.GCC.reset();
+        for (AlgorithmType algorithmType : AlgorithmType.values()) {
+            algorithmType.reset();
+        }
 
         TaxiScanner.getInstance().finish();
 
