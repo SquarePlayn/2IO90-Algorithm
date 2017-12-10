@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Vertex {
 
@@ -7,41 +8,38 @@ public class Vertex {
     private int id;
 
     //Shortest path variables
-    private boolean[] cached;
-    private int[] distanceTo;
-    private Vertex[] nextTowards;
-    private boolean[] visited;
+    private HashMap<Integer, Integer> distanceTo;
+    private HashMap<Integer, Vertex> nextTowards;
+    private HashMap<Integer, Boolean> visited;
 
 
     public Vertex(int id) {
         this.id = id;
         connections = new ArrayList<>();
 
-        int amountOfNodes = Preamble.graphSize;
-        cached = new boolean[amountOfNodes];
-        distanceTo = new int[amountOfNodes];
-        nextTowards = new Vertex[amountOfNodes];
-        visited = new boolean[amountOfNodes];
+        distanceTo = new HashMap<>();
+        nextTowards = new HashMap<>();
+        visited = new HashMap<>();
     }
 
     public void updateDistanceInfo(Vertex startedPoint, int distance, Vertex nextTowards) {
-        this.distanceTo[startedPoint.getId()] = distance;
-        this.nextTowards[startedPoint.getId()] = nextTowards;
-        this.cached[startedPoint.getId()] = true;
+        this.distanceTo.put(startedPoint.getId(), distance);
+        this.nextTowards.put(startedPoint.getId(), nextTowards);
     }
 
     public int getDistanceTo(Vertex vertex) {
-        if(!cached[vertex.getId()]) {
+        if(!distanceTo.containsKey(vertex.getId())) {
             vertex.bfs();
         }
-        return distanceTo[vertex.getId()];
+
+        return distanceTo.get(vertex.getId());
     }
 
     public Vertex getNextTowards(Vertex vertex) {
-        if(!cached[vertex.getId()]) {
+        if(!nextTowards.containsKey(vertex.getId())) {
             vertex.bfs();
         }
-        return nextTowards[vertex.getId()];
+        return nextTowards.get(vertex.getId());
     }
 
     public void addNeigbour(Vertex v) {
@@ -57,7 +55,7 @@ public class Vertex {
     }
 
     public void setVisited(Vertex vertex, boolean value) {
-        visited[vertex.getId()] = value;
+        visited.put(vertex.getId(), value);
     }
 
     /**
@@ -73,9 +71,8 @@ public class Vertex {
         ArrayList<Vertex> queue = new ArrayList<>();
 
         //Start with the start. Since we have added it now, set visited to true.
-        cached[getId()] = true;
-        distanceTo[getId()] = 0;
-        visited[getId()] = true;
+        distanceTo.put(getId(), 0);
+        visited.put(getId(),true);
 
         queue.add(this);
 
@@ -101,6 +98,6 @@ public class Vertex {
     }
 
     public boolean getVisited(Vertex vertex) {
-        return visited[vertex.getId()];
+        return visited.getOrDefault(vertex.getId(), false);
     }
 }
