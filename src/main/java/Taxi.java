@@ -58,7 +58,11 @@ public class Taxi {
     }
 
     public void setPosition(Vertex position) {
+        if(this.position != null) {
+            this.position.removeTaxi(this);
+        }
         this.position = position;
+        this.position.addTaxi(this);
     }
 
     public Vertex getPosition() {

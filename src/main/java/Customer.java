@@ -18,15 +18,18 @@ public class Customer {
         this.position = initialPosition;
         this.destination = destination;
         this.creationMinute = creationMinute;
+        this.position.addCustomer(this);
     }
 
     public void drop(Vertex position) {
         this.taxi = null;
         this.position = position;
+        this.position.addCustomer(this);
     }
 
     public void pickup(Taxi taxi) {
         this.taxi = taxi;
+        this.position.removeCustomer(this);
         this.position = null;
     }
 
@@ -64,5 +67,9 @@ public class Customer {
 
     public void setBeingHandled(boolean beingHandled) {
         isBeingHandled = beingHandled;
+    }
+
+    public int getCreationMinute() {
+        return creationMinute;
     }
 }

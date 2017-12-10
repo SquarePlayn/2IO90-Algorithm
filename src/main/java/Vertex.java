@@ -1,11 +1,14 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Vertex {
 
-    //List all adjacent vertices
-    private ArrayList<Vertex> connections;
+    private ArrayList<Vertex> connections; //List all adjacent vertices
     private int id;
+
+    private HashSet<Customer> customers; //All customers outside on this spot
+    private HashSet<Taxi> taxis; //All taxis outside on this spot
 
     //Shortest path variables
     private HashMap<Integer, Integer> distanceTo;
@@ -20,6 +23,9 @@ public class Vertex {
         distanceTo = new HashMap<>();
         nextTowards = new HashMap<>();
         visited = new HashMap<>();
+
+        customers = new HashSet<>();
+        taxis = new HashSet<>();
     }
 
     public void updateDistanceInfo(Vertex startedPoint, int distance, Vertex nextTowards) {
@@ -99,5 +105,29 @@ public class Vertex {
 
     public boolean getVisited(Vertex vertex) {
         return visited.getOrDefault(vertex.getId(), false);
+    }
+
+    public HashSet<Customer> getCustomers() {
+        return customers;
+    }
+
+    public boolean addCustomer(Customer customer) {
+        return getCustomers().add(customer);
+    }
+
+    public boolean removeCustomer(Customer customer) {
+        return getCustomers().remove(customer);
+    }
+
+    public HashSet<Taxi> getTaxis() {
+        return taxis;
+    }
+
+    public boolean addTaxi(Taxi taxi) {
+        return getTaxis().add(taxi);
+    }
+
+    public boolean removeTaxi(Taxi taxi) {
+        return  getTaxis().remove(taxi);
     }
 }
