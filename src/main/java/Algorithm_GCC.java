@@ -198,7 +198,7 @@ public class Algorithm_GCC extends Algorithm {
                 Customer customer = move.getCustomer();
 
                 //Picking up a passenger
-                taxi.pickup(customer);
+                taxi.pickup(customer, sharedData);
 
                 //Remove him from the people outside queue
                 customerQueue.remove(customer);

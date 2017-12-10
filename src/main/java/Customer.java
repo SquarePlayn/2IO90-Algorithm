@@ -1,7 +1,8 @@
 public class Customer {
 
-    private Vertex initialPosition;
-    private Vertex destination;
+    private final Vertex initialPosition;
+    private final Vertex destination;
+    private final int creationMinute;
 
     private Vertex position; //Position of the customer. Null if in taxi
     private Taxi taxi; //The taxi the customer is in. Null if not in any taxi.
@@ -12,10 +13,11 @@ public class Customer {
     //TODO Do we want to keep track of in which Taxi the customer is and where it is when dropped and such?
     //fixme because currently the position is not being updated (it's not even possible to do, all private)
 
-    public Customer(Vertex initialPosition, Vertex destination) {
+    public Customer(Vertex initialPosition, Vertex destination, int creationMinute) {
         this.initialPosition = initialPosition;
         this.position = initialPosition;
         this.destination = destination;
+        this.creationMinute = creationMinute;
     }
 
     public void drop(Vertex position) {

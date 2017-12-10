@@ -127,7 +127,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
                 Customer customer = move.getCustomer();
 
                 //Picking up a passenger
-                taxi.pickup(customer);
+                taxi.pickup(customer, sharedData);
 
                 //Since we have somewhere to go, we are in operation
                 taxi.setInOperation(true);

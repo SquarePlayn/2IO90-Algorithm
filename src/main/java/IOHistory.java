@@ -13,7 +13,7 @@ public class IOHistory {
 
     public Minute getMinute(int number) {
         while(number >= minutes.size()) {
-            minutes.add(new Minute());
+            minutes.add(new Minute(minutes.size()));
         }
             return minutes.get(number);
     }

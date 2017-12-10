@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
 
 public class SharedData {
@@ -6,7 +7,9 @@ public class SharedData {
 
     private Random random;
     private ArrayList<Taxi> taxiList;
-    private ArrayList<Customer> customerList;
+    private HashSet<Customer> customerList;
+    private HashSet<Customer> customerOutsideList;
+    private HashSet<Customer> customerInTaxiList;
     private IOHistory iOHistory;
     private Graph graph;
 
@@ -14,7 +17,9 @@ public class SharedData {
         this.graph = graph;
         this.random = new Random(SEED);
         this.taxiList = new ArrayList<>();
-        this.customerList = new ArrayList<>();
+        this.customerList = new HashSet<>();
+        this.customerOutsideList = new HashSet<>();
+        this.customerInTaxiList = new HashSet<>();
         this.iOHistory = new IOHistory();
     }
 
@@ -26,8 +31,16 @@ public class SharedData {
         return taxiList;
     }
 
-    public ArrayList<Customer> getCustomerList() {
+    public HashSet<Customer> getCustomerList() {
         return customerList;
+    }
+
+    public HashSet<Customer> getCustomerOutsideList() {
+        return customerOutsideList;
+    }
+
+    public HashSet<Customer> getCustomerInTaxiList() {
+        return customerInTaxiList;
     }
 
     public Graph getGraph() {

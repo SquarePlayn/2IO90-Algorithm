@@ -2,10 +2,12 @@ import java.util.ArrayList;
 
 public class Minute {
 
+    private final int minuteNumber;
     private ArrayList<Call> calls;
     private ArrayList<Move> moves;
 
-    public Minute() {
+    public Minute(int minuteNumber) {
+        this.minuteNumber = minuteNumber;
         calls = new ArrayList<>();
         moves = new ArrayList<>();
     }
@@ -45,10 +47,11 @@ public class Minute {
             //Read in each new customer
             Vertex position = sharedData.getGraph().getVertex(Integer.parseInt(input[i * 2 + 1]));
             Vertex destination = sharedData.getGraph().getVertex(Integer.parseInt(input[i * 2 + 2]));
-            Customer customer = new Customer(position, destination);
+            Customer customer = new Customer(position, destination, minuteNumber);
 
             //Add the new customer to the customers
             sharedData.getCustomerList().add(customer);
+            sharedData.getCustomerOutsideList().add(customer);
 
             //Add the new call to the current minute we're constructing
             addCall(new Call(customer, position, destination));
