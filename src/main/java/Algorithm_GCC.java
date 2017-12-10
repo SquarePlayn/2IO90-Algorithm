@@ -1,3 +1,5 @@
+import javafx.util.Pair;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -118,7 +120,7 @@ public class Algorithm_GCC extends Algorithm {
             HashSet<Customer> candidatesHash = new HashSet<>(candidatePassengers);
             HashSet<Vertex> path = new HashSet<>();
 
-            Map.Entry<Integer, Vertex> bestOption = computeBestScore(taxi, neighbor, path, SEARCH_DISTANCE, candidatesHash);
+            Pair<Integer, Vertex> bestOption = computeBestScore(taxi, neighbor, path, SEARCH_DISTANCE, candidatesHash);
             int score = bestOption.getKey();
 
             // TODO if equal decide based on amount of dropoffs e.g.
@@ -188,7 +190,7 @@ public class Algorithm_GCC extends Algorithm {
         }
     }
 
-    private Map.Entry<Integer, Vertex> computeBestScore(Taxi taxi, Vertex vertex, HashSet<Vertex> path, int remainingDepth, HashSet<Customer> candidates) {
+    private Pair<Integer, Vertex> computeBestScore(Taxi taxi, Vertex vertex, HashSet<Vertex> path, int remainingDepth, HashSet<Customer> candidates) {
 
         Vertex taxiPosition = taxi.getPosition();
 
@@ -214,7 +216,7 @@ public class Algorithm_GCC extends Algorithm {
 
             for(Vertex neighbour : vertex.getNeigbours()) {
 
-               Map.Entry<Integer, Vertex> result = computeBestScore(taxi, neighbour, newPath,
+                Pair<Integer, Vertex> result = computeBestScore(taxi, neighbour, newPath,
                        remainingDepth-1, newCandidates);
 
                 if(result.getKey() > score) {
@@ -223,7 +225,7 @@ public class Algorithm_GCC extends Algorithm {
                 }
             }
 
-            return new HashMap.SimpleEntry<>(score, bestVertex);
+            return new Pair<>(score, bestVertex);
         } else {
             //Calculate score over all candidates
             int score = 0;
@@ -267,7 +269,7 @@ public class Algorithm_GCC extends Algorithm {
             }
             //Main.debug("Score T("+taxi.getOutputId()+") = "+score);
 
-            return new HashMap.SimpleEntry<>(score, vertex);
+            return new Pair<>(score, vertex);
         }
     }
 
