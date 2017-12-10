@@ -9,6 +9,7 @@ public class Customer {
 
     //Needed by GCC. Keeps track of if another taxi already handles this customer. Does not need updating between minutes
     private boolean isBeingHandled;
+    private boolean hasBeenPickedUp;
 
     //TODO Do we want to keep track of in which Taxi the customer is and where it is when dropped and such?
     //fixme because currently the position is not being updated (it's not even possible to do, all private)
@@ -23,10 +24,12 @@ public class Customer {
     public void drop(Vertex position) {
         this.taxi = null;
         this.position = position;
+        this.position.addCustomer(this);
     }
 
     public void pickup(Taxi taxi) {
         this.taxi = taxi;
+        this.position.removeCustomer(this);
         this.position = null;
     }
 
@@ -64,5 +67,17 @@ public class Customer {
 
     public void setBeingHandled(boolean beingHandled) {
         isBeingHandled = beingHandled;
+    }
+
+    public void setHasBeenPickedUp(boolean hasBeenPickedUp) {
+        this.hasBeenPickedUp = hasBeenPickedUp;
+    }
+
+    public boolean isHasBeenPickedUp() {
+        return hasBeenPickedUp;
+    }
+
+    public boolean getHasBeenPickedUp() {
+        return hasBeenPickedUp;
     }
 }
