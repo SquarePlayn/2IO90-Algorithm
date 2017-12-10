@@ -3,11 +3,9 @@ import java.util.HashMap;
 
 public class Algorithm_SimpleQueue extends Algorithm {
 
-    
     private ArrayList<Customer> customerQueue;
     private ArrayList<Taxi> taxiReadyQueue;
     private ArrayList<Taxi> taxiInOperationList;
-
 
     @Override
     public void readMinute(ArrayList<Call> calls) {

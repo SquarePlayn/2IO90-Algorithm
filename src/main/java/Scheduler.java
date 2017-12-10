@@ -69,6 +69,9 @@ public class Scheduler {
             advanceMinute(false);
             outputMinute(currentMinute);
         }
+
+        // Properly finish the scanner (e.g. closing)
+        scanner.finish();
     }
 
     /**

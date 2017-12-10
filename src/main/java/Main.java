@@ -20,6 +20,10 @@ public class Main {
 
         //Hand execution over to the scheduler
         scheduler.run();
+
+        // Reset (create a new instance) each algorithm, this is required for the interpreter
+        AlgorithmType.SIMPLEQUEUE.reset();
+        AlgorithmType.GCC.reset();
     }
 
     public static void debug(String message) {
