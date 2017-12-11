@@ -4,6 +4,7 @@ import java.util.*;
 
 public class Algorithm_GCC extends Algorithm {
 
+    private static final int RECURSE_MODIFIER = 10;
     private int lookaheadDist = 5;
     //The length of the path that the algo will consider ( min = 1 = only check neighbours).
 
@@ -21,10 +22,9 @@ public class Algorithm_GCC extends Algorithm {
 
     @Override
     public void setup() {
-        int posLookahead = 10 -(int)(Math.log(sharedData.getGraph().getSize())/Math.log(2));
-        lookaheadDist = Math.min(1,Math.max(6,posLookahead));
+        int posLookahead = RECURSE_MODIFIER -(int)(Math.log(sharedData.getGraph().getSize())/Math.log(2));
+        lookaheadDist = Math.max(1,Math.min(6,posLookahead));
         Main.debug("Chose lookahead distance of "+lookaheadDist);
-
     }
 
     @Override
