@@ -185,6 +185,8 @@ public class TaxiScanner {
             state = State.AWAITINGNEXTLINE;
         }
 
+        Main.debug("[Out] "+s);
+
         // Only output to the console if this is desired
         if (outputToConsole) {
             System.out.println(s);

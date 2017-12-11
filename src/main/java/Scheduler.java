@@ -3,7 +3,7 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class Scheduler {
-    private static final int SHEDULE_CUTOFF = 1024;
+    private static final int SHEDULE_CUTOFF = 2048;
 
     private TaxiScanner scanner;
     private SharedData sharedData;
@@ -99,9 +99,8 @@ public class Scheduler {
             return;
         }
 
-        Main.debug("Reading input for minute "+currentMinute);
-
         String input = scanner.nextLine();
+        Main.debug("[IN:"+currentMinute+"] "+input);
         sharedData.getIOHistory().readMinute(input, currentMinute, sharedData);
     }
 

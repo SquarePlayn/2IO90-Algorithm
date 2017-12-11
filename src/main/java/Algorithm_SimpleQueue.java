@@ -78,10 +78,9 @@ public class Algorithm_SimpleQueue extends Algorithm {
     }
 
     public ArrayList<Move> advanceTaxi(Taxi taxi) {
-        //Sanitycheck if we are indeed in operation
-
         ArrayList<Move> output = new ArrayList<>();
 
+        //Sanitycheck if we are indeed in operation
         if(taxi.getInOperation()) {
             if (!taxi.getPath().isEmpty()) {
 

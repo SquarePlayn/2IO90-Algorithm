@@ -9,6 +9,8 @@ public class Customer {
 
     //Needed by GCC. Keeps track of if another taxi already handles this customer. Does not need updating between minutes
     private boolean isBeingHandled;
+    private boolean hasBeenPickedUp;
+    private boolean hasBeenChecked;
 
     public Customer(Vertex initialPosition, Vertex destination, int creationMinute) {
         this.initialPosition = initialPosition;
@@ -21,7 +23,9 @@ public class Customer {
     public void drop(Vertex position) {
         this.taxi = null;
         this.position = position;
-        this.position.addCustomer(this);
+        if(!isAtDestination()) {
+            this.position.addCustomer(this);
+        }
     }
 
     public void pickup(Taxi taxi) {
@@ -68,5 +72,21 @@ public class Customer {
 
     public int getCreationMinute() {
         return creationMinute;
+    }
+
+    public boolean hasBeenPickedUp() {
+        return hasBeenPickedUp;
+    }
+
+    public void setHasBeenPickedUp(boolean hasBeenPickedUp) {
+        this.hasBeenPickedUp = hasBeenPickedUp;
+    }
+
+    public boolean hasBeenChecked() {
+        return hasBeenChecked;
+    }
+
+    public void setHasBeenChecked(boolean hasBeenChecked) {
+        this.hasBeenChecked = hasBeenChecked;
     }
 }
