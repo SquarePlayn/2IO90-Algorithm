@@ -12,9 +12,6 @@ public class Algorithm_GCC extends Algorithm {
     // How much is added to the score for each part of the path a customer would not travel over because it has been delivered
     // before that point. Min 2. Seems higher = worse
 
-    private static final int RANDOMSEED = 123456789;
-    Random random = new Random(RANDOMSEED);
-
     @Override
     public void readMinute(ArrayList<Call> calls) {
 
@@ -137,7 +134,7 @@ public class Algorithm_GCC extends Algorithm {
                         //new one doesn't either
 
                         //cases are equal, must decide on something but not always the same
-                        better = random.nextBoolean();
+                        better = sharedData.getRandom().nextBoolean();
                     }
                 } else {
                     //Current best has to do pickup / drop
@@ -146,7 +143,7 @@ public class Algorithm_GCC extends Algorithm {
                         better = true;
                     } else {
                         //cases are pretty (but not necessarily fully) equal, go random
-                        better = random.nextBoolean();
+                        better = sharedData.getRandom().nextBoolean();
                     }
                 }
             } else {
