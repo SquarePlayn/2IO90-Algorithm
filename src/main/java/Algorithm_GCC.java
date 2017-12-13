@@ -23,7 +23,7 @@ public class Algorithm_GCC extends Algorithm {
     @Override
     public void setup() {
         int posLookahead = RECURSE_MODIFIER -(int)(Math.log(sharedData.getGraph().getSize())/Math.log(2));
-        lookaheadDist = Math.max(1,Math.min(6,posLookahead));
+        setLookaheadDist(lookaheadDist = Math.max(1,Math.min(6,posLookahead)));
         Main.debug("Chose lookahead distance of "+lookaheadDist);
     }
 
@@ -32,9 +32,9 @@ public class Algorithm_GCC extends Algorithm {
         ArrayList<Move> minute = new ArrayList<>();
 
         //TODO Remove debug VVV
-        String debug = "        Starting minute "+lastUpdatedMinute+". Outside are [";
+        StringBuilder debug = new StringBuilder("        Starting minute " + lastUpdatedMinute + ". Outside are [");
         for(Customer c : sharedData.getCustomerOutsideList()) {
-            debug += c.getPosition().getId()+">"+c.getDestination().getId()+",";
+            debug.append(c.getPosition().getId()).append(">").append(c.getDestination().getId()).append(",");
         }
         Main.debug(debug+"] -------------------------");
 
@@ -67,9 +67,9 @@ public class Algorithm_GCC extends Algorithm {
                     continue;
                 } else {
                     //TODO Remove debug VVV
-                    String d = "T"+taxi.getOutputId()+"("+taxi.getPosition().getId()+") may pick up [";
+                    StringBuilder d = new StringBuilder("T" + taxi.getOutputId() + "(" + taxi.getPosition().getId() + ") may pick up [");
                     for(Customer c : taxi.getPosition().getCustomers()) {
-                        d += c.getPosition().getId()+">"+c.getDestination().getId()+",";
+                        d.append(c.getPosition().getId()).append(">").append(c.getDestination().getId()).append(",");
                     }
                     Main.debug(d+"]");
                 }
