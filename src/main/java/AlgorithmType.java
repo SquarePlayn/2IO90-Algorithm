@@ -7,10 +7,10 @@ public enum AlgorithmType {
         }
     },
 
-    GCC() {
+    LCC() {
         @Override
         public void reset() {
-            this.algorithm = new Algorithm_GCC();
+            this.algorithm = new Algorithm_LCC();
         }
     };
 
