@@ -80,7 +80,7 @@ public class Scheduler {
         if(sharedData.getGraph().getSize() > SHEDULE_CUTOFF) {
             activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
         } else {
-            activeAlgorithm = AlgorithmType.LCC;
+            activeAlgorithm = AlgorithmType.LSD;
         }
 
         if(!activeAlgorithm.getAlgorithm().isInitialized()){

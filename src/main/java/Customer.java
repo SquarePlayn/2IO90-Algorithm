@@ -7,7 +7,7 @@ public class Customer {
     private Vertex position; //Position of the customer. Null if in taxi
     private Taxi taxi; //The taxi the customer is in. Null if not in any taxi.
 
-    //Needed by LCC. Keeps track of if another taxi already handles this customer. Does not need updating between minutes
+    //Needed by LSD. Keeps track of if another taxi already handles this customer. Does not need updating between minutes
     private boolean isBeingHandled;
     private boolean hasBeenPickedUp;
     private boolean hasBeenChecked;

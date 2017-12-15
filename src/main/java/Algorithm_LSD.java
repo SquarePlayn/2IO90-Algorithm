@@ -2,7 +2,7 @@ import javafx.util.Pair;
 
 import java.util.*;
 
-public class Algorithm_LCC extends Algorithm {
+public class Algorithm_LSD extends Algorithm {
 
     private static final int RECURSE_MODIFIER = 10;
     private int lookaheadDist = 5;
@@ -74,7 +74,7 @@ public class Algorithm_LCC extends Algorithm {
             }
 
             // Taxi has at least one passenger in our taxi or on our spot.
-            addLccMoves(minute, taxi);
+            addLsdMoves(minute, taxi);
         }
 
         processMoves(minute);
@@ -101,7 +101,7 @@ public class Algorithm_LCC extends Algorithm {
         return closest;
     }
 
-    private void addLccMoves(ArrayList<Move> minute, Taxi taxi) {
+    private void addLsdMoves(ArrayList<Move> minute, Taxi taxi) {
         ArrayList<Customer> candidatePassengers = new ArrayList<>(taxi.getPassengers());
 
         //TODO Exclude customers already picked up
