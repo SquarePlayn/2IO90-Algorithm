@@ -3,7 +3,7 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class Scheduler {
-    private static final int SHEDULE_CUTOFF = 1024;
+    private static final int SHEDULE_CUTOFF = 1;
 
     private TaxiScanner scanner;
     private SharedData sharedData;

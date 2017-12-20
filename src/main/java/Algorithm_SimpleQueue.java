@@ -1,11 +1,11 @@
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Algorithm_SimpleQueue extends Algorithm {
 
     private ArrayList<Customer> customerQueue;
     private ArrayList<Taxi> taxiReadyQueue;
-    private ArrayList<Taxi> taxiInOperationList;
+    private HashSet<Taxi> taxiInOperationList;
 
     @Override
     public void readMinute(ArrayList<Call> calls) {
@@ -19,7 +19,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
         //Initialize the queues.
         customerQueue = new ArrayList<>();
         taxiReadyQueue = new ArrayList<>();
-        taxiInOperationList = new ArrayList<>();
+        taxiInOperationList = new HashSet<>();
 
         taxiReadyQueue.addAll(sharedData.getTaxiList()); // Initially all taxis are unoccupied, so add them all to the ready queue.
 
@@ -27,36 +27,48 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
     @Override
     public ArrayList<Move> processMinute(boolean callsLeft) {
-        // First assign a taxi to each waiting customer as far as possible
-        // Loop until there are no customers waiting anymore.
-        // If there are no more ready taxis, the remaining customers will have to wait
-        while (!customerQueue.isEmpty() && !taxiReadyQueue.isEmpty()) {
-            // Get the first-up taxi, pop it from the queue and add it to the ones in operation
-            Taxi taxi = taxiReadyQueue.remove(0);
-            taxiInOperationList.add(taxi);
+        ArrayList<Move> output = new ArrayList<>();
 
-            // Pop the customer that is first-up
-            Customer customer = customerQueue.remove(0);
-
-            //Assign the taxi to the customer and make the taxi go towards the customer
-            taxi.setCustomer(customer);
-            taxi.setPath(sharedData.getGraph().getShortestPath(taxi.getPosition(), customer.getPosition()));
-            taxi.setInOperation(true);
+        for(Taxi taxi : taxiInOperationList) {
+            if (taxi.getInOperation() && taxi.getPosition().equals(taxi.getCustomer().getPosition())) {
+                if (taxi.getCustomer().hasBeenPickedUp()) {
+                    continue;
+                }
+                taxiReadyQueue.remove(taxi);
+                customerQueue.remove(taxi.getCustomer());
+                taxi.getPath().clear();
+            }
         }
 
+        if (!customerQueue.isEmpty() && !taxiReadyQueue.isEmpty()) {
+            HashMap<Taxi, Customer> hungOut = applyHungarian();
+
+            for (Map.Entry<Taxi, Customer> entry : hungOut.entrySet()) {
+                Taxi taxi = entry.getKey();
+                Customer customer = entry.getValue();
+
+                taxiInOperationList.add(taxi);
+                if (!customer.equals(taxi.getCustomer())) {
+                    Main.debug("CUSTOMER CHANGED!!!");
+                }
+                taxi.setCustomer(customer);
+                taxi.setPath(sharedData.getGraph().getShortestPath(taxi.getPosition(), customer.getPosition()));
+                taxi.setInOperation(true);
+            }
+        }
 
         // Advance all taxis that have an operation
-        ArrayList<Move> output = new ArrayList<>();
-        for (int i=0; i<taxiInOperationList.size(); i++) {
-            Taxi taxi = taxiInOperationList.get(i);
-            output.addAll(advanceTaxi(taxi));
+        Iterator<Taxi> it = taxiInOperationList.iterator();
+        while (it.hasNext()) {
+            Taxi taxi = it.next();
 
             if (!taxi.getInOperation()) {
-                // If the taxi is now done delivering its client, we can put it back in the queue
-                taxiInOperationList.remove(taxi);
-                i--;
+                it.remove();
                 taxiReadyQueue.add(taxi);
+                continue;
             }
+
+            output.addAll(advanceTaxi(taxi));
         }
 
         //Make sure the info stays updated before we go back
@@ -77,32 +89,65 @@ public class Algorithm_SimpleQueue extends Algorithm {
                 var == AlgoVar.TAXI_PATH;
     }
 
+    private HashMap<Taxi, Customer> applyHungarian() {
+        HashMap<Taxi, Customer> output = new HashMap<>(taxiReadyQueue.size());
+        double[][] costMatrix = new double[taxiReadyQueue.size()][customerQueue.size()];
+
+        for(int t = 0; t < taxiReadyQueue.size(); t++) {
+            for(int c = 0; c < customerQueue.size(); c++) {
+                Taxi taxi = taxiReadyQueue.get(t);
+                Customer customer = customerQueue.get(c);
+
+                costMatrix[t][c] = taxi.getPosition().getDistanceTo(customer.getDestination());
+            }
+        }
+
+        HungarianAlgorithm ha = new HungarianAlgorithm(costMatrix);
+        int[] result = ha.execute();
+
+        for(int t = 0; t < result.length; t++) {
+            Taxi taxi = taxiReadyQueue.get(t);
+            int c = result[t];
+
+            if (c == -1) {
+                taxi.setInOperation(false);
+                continue;
+            }
+
+            Customer customer = customerQueue.get(c);
+
+            output.put(taxi, customer);
+        }
+
+        return output;
+    }
+
     public ArrayList<Move> advanceTaxi(Taxi taxi) {
         ArrayList<Move> output = new ArrayList<>();
 
         //Sanitycheck if we are indeed in operation
-        if(taxi.getInOperation()) {
+        if (taxi.getInOperation()) {
             if (!taxi.getPath().isEmpty()) {
 
                 //We are still driving. Advance to next spot
                 output.add(new Move(taxi, taxi.getPath().remove(0)));
-
             } else {
                 if (taxi.getPassengers().isEmpty()) {
                     //We still have to pick up the passenger
 
                     //TODO Sanitycheck if customer is indeed at the position we are at
                     //TODO Sanitycheck if first node is actually correct
-
+                    taxiReadyQueue.remove(taxi);
+                    customerQueue.remove(taxi.getCustomer());
                     output.add(new Move('p', taxi, taxi.getCustomer()));
-
                 } else {
                     //We are done driving, and have already picked up our customer, so that means we are at the destination
                     // so we can drop the customer of
-
-                    output.add(new Move('d',taxi, taxi.getCustomer()));
+                    output.add(new Move('d', taxi, taxi.getCustomer()));
                 }
             }
+        } else {
+            Main.debug("[ERROR] Tried to advance a taxi which is not in operation.");
         }
 
         return output;
@@ -119,9 +164,11 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
                 //Moving to another node
                 taxi.setPosition(move.getNode());
-
+                Main.debug("m " + taxi.getId() + " " + move.getNode().getId());
             } else if(action == 'p') {
                 Customer customer = move.getCustomer();
+                Main.debug("picking " + move.getTaxi().getOutputId() + " " + move.getCustomer().getDestination().getId());
+                customer.setHasBeenPickedUp(true);
 
                 //Picking up a passenger
                 taxi.pickup(customer, sharedData);
@@ -137,6 +184,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
                 taxi.drop(customer, sharedData);
                 taxi.setInOperation(false);
                 taxi.setCustomer(null);
+                Main.debug("d " + move.getTaxi().getOutputId() + " " + move.getCustomer().getDestination().getId());
             }
         }
 
