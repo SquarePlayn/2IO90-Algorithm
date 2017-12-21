@@ -12,7 +12,16 @@ public enum AlgorithmType {
         public void reset() {
             this.algorithm = new Algorithm_LSD();
         }
-    };
+    },
+
+    HUNGARIAN() {
+        @Override
+        public void reset() {
+            this.algorithm = new Algorithm_Hungarian();
+        }
+    },
+
+    ;
 
     protected Algorithm algorithm;
 

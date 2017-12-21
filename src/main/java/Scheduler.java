@@ -78,7 +78,7 @@ public class Scheduler {
         //TODO Add something better
 
         if(sharedData.getGraph().getSize() > SHEDULE_CUTOFF) {
-            activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
+            activeAlgorithm = AlgorithmType.HUNGARIAN;
         } else {
             activeAlgorithm = AlgorithmType.LSD;
         }
