@@ -1,5 +1,4 @@
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Algorithm_SimpleQueue extends Algorithm {
 
@@ -30,13 +29,14 @@ public class Algorithm_SimpleQueue extends Algorithm {
         ArrayList<Move> output = new ArrayList<>();
 
         for(Taxi taxi : taxiInOperationList) {
-            if (taxi.getInOperation() && taxi.getPosition().equals(taxi.getCustomer().getPosition())) {
-                if (taxi.getCustomer().hasBeenPickedUp()) {
-                    continue;
-                }
+            if (taxi.getInOperation()
+                    && taxi.getPosition().equals(taxi.getCustomer().getPosition())
+                    && !taxi.getCustomer().hasBeenPickedUp()
+                    && taxi.getPassengers().isEmpty()) {
                 taxiReadyQueue.remove(taxi);
                 customerQueue.remove(taxi.getCustomer());
                 taxi.getPath().clear();
+                Main.debug("Cleared " + taxi.getOutputId() + " with customer " + taxi.getCustomer().getDestination().getId() + " operating: " + taxi.getInOperation());
             }
         }
 
@@ -46,10 +46,12 @@ public class Algorithm_SimpleQueue extends Algorithm {
             for (Map.Entry<Taxi, Customer> entry : hungOut.entrySet()) {
                 Taxi taxi = entry.getKey();
                 Customer customer = entry.getValue();
+                Main.debug(taxi.getOutputId() + ": " + customer.getDestination().getId() + ", " + taxi.getPosition().getDistanceTo(customer.getPosition()));
 
                 taxiInOperationList.add(taxi);
+
                 if (!customer.equals(taxi.getCustomer())) {
-                    Main.debug("CUSTOMER CHANGED!!!");
+                    Main.debug("CUSTOMER CHANGED!!! " + taxi.getOutputId() + " " + taxi.getPosition().getId() + " " + (customer.getTaxi()== null ? "none" : customer.getTaxi().getPosition().getId()));
                 }
                 taxi.setCustomer(customer);
                 taxi.setPath(sharedData.getGraph().getShortestPath(taxi.getPosition(), customer.getPosition()));
@@ -57,14 +59,24 @@ public class Algorithm_SimpleQueue extends Algorithm {
             }
         }
 
+        if(taxiInOperationList.isEmpty()) {
+            for(Customer customer : sharedData.getCustomerList()) {
+                if(!customer.isAtDestination()) {
+                    Main.debug(customer.getDestination().getId() + " not delivered yet.");
+                }
+            }
+            Main.debug("No taxis in operation!");
+        }
+
         // Advance all taxis that have an operation
         Iterator<Taxi> it = taxiInOperationList.iterator();
         while (it.hasNext()) {
             Taxi taxi = it.next();
-
             if (!taxi.getInOperation()) {
                 it.remove();
-                taxiReadyQueue.add(taxi);
+                if(!taxiReadyQueue.contains(taxi)) {
+                    taxiReadyQueue.add(taxi);
+                }
                 continue;
             }
 
@@ -98,7 +110,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
                 Taxi taxi = taxiReadyQueue.get(t);
                 Customer customer = customerQueue.get(c);
 
-                costMatrix[t][c] = taxi.getPosition().getDistanceTo(customer.getDestination());
+                costMatrix[t][c] = taxi.getPosition().getDistanceTo(customer.getPosition());
             }
         }
 
@@ -110,6 +122,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
             int c = result[t];
 
             if (c == -1) {
+                Main.debug("c == -1 for taxi " + taxi.getOutputId());
                 taxi.setInOperation(false);
                 continue;
             }
@@ -164,10 +177,10 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
                 //Moving to another node
                 taxi.setPosition(move.getNode());
-                Main.debug("m " + taxi.getId() + " " + move.getNode().getId());
+                //Main.debug("m " + taxi.getId() + " " + move.getNode().getId());
             } else if(action == 'p') {
                 Customer customer = move.getCustomer();
-                Main.debug("picking " + move.getTaxi().getOutputId() + " " + move.getCustomer().getDestination().getId());
+                //Main.debug("picking " + move.getTaxi().getOutputId() + " " + move.getCustomer().getDestination().getId());
                 customer.setHasBeenPickedUp(true);
 
                 //Picking up a passenger
@@ -184,7 +197,9 @@ public class Algorithm_SimpleQueue extends Algorithm {
                 taxi.drop(customer, sharedData);
                 taxi.setInOperation(false);
                 taxi.setCustomer(null);
-                Main.debug("d " + move.getTaxi().getOutputId() + " " + move.getCustomer().getDestination().getId());
+                taxiInOperationList.remove(taxi);
+                taxiReadyQueue.add(taxi);
+                //Main.debug("d " + move.getTaxi().getOutputId() + " " + move.getCustomer().getDestination().getId());
             }
         }
 
