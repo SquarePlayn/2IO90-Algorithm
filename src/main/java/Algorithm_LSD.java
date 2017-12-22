@@ -4,7 +4,9 @@ import java.util.*;
 
 public class Algorithm_LSD extends Algorithm {
 
-    private static final int RECURSE_MODIFIER = 10;
+    private static final int RECURSE_MODIFIER = 13;
+    private static final int MAX_LOOKAHEAD = 7;
+    private static final int UPDATE_FREQUENCY = 1;
     private int lookaheadDist = 5;
     //The length of the path that the algo will consider ( min = 1 = only check neighbours).
 
@@ -20,7 +22,7 @@ public class Algorithm_LSD extends Algorithm {
     @Override
     public void setup() {
         int posLookahead = RECURSE_MODIFIER -(int)(Math.log(sharedData.getGraph().getSize())/Math.log(2));
-        setLookaheadDist(lookaheadDist = Math.max(1,Math.min(6,posLookahead)));
+        setLookaheadDist(lookaheadDist = Math.max(1,Math.min(MAX_LOOKAHEAD,posLookahead)));
         Main.debug("Chose lookahead distance of "+lookaheadDist);
     }
 
@@ -29,11 +31,11 @@ public class Algorithm_LSD extends Algorithm {
         ArrayList<Move> minute = new ArrayList<>();
 
         //TODO Remove debug VVV
-        StringBuilder debug = new StringBuilder("        Starting minute " + lastUpdatedMinute + ". Outside are [");
+        /*StringBuilder debug = new StringBuilder("        Starting minute " + lastUpdatedMinute + ". Outside are [");
         for(Customer c : sharedData.getCustomerOutsideList()) {
             debug.append(c.getPosition().getId()).append(">").append(c.getDestination().getId()).append(",");
         }
-        Main.debug(debug+"] -------------------------");
+        Main.debug(debug+"] -------------------------");*/
 
         for(Customer customer : sharedData.getCustomerList()) {
             customer.setBeingHandled(customer.isInTaxi());
@@ -57,18 +59,19 @@ public class Algorithm_LSD extends Algorithm {
                     //Go one towards the customer we chose to handle
                     Vertex next = taxi.getPosition().getNextTowards(closestCustomer.getPosition());
                     minute.add(new Move(taxi, next));
+                    taxi.setTurnsLeft(0);
 
                     //Let other taxis know we've got this person covered
                     closestCustomer.setBeingHandled(true);
 
                     continue;
                 } else {
-                    //TODO Remove debug VVV
+                    /*//TODO Remove debug VVV
                     StringBuilder d = new StringBuilder("T" + taxi.getOutputId() + "(" + taxi.getPosition().getId() + ") may pick up [");
                     for(Customer c : taxi.getPosition().getCustomers()) {
                         d.append(c.getPosition().getId()).append(">").append(c.getDestination().getId()).append(",");
                     }
-                    Main.debug(d+"]");
+                    Main.debug(d+"]");*/
                 }
                 //If we get here, there's a customer at out position, let's go do our pickup and dropoff logic
             }
@@ -102,29 +105,22 @@ public class Algorithm_LSD extends Algorithm {
     }
 
     private void addLsdMoves(ArrayList<Move> minute, Taxi taxi) {
-        ArrayList<Customer> candidatePassengers = new ArrayList<>(taxi.getPassengers());
+       if(taxi.getTurnsLeft() <= 0) {
+           int bestScore = Integer.MIN_VALUE;
+           MoveOption bestOption = null;        // Connected graph -> always neighbor -> never null.
 
-        //TODO Exclude customers already picked up
-        ArrayList<Customer> outsidePassengers = new ArrayList<>(sharedData.getCustomerOutsideList());
+           for (Vertex neighbor : taxi.getPosition().getNeigbours()) {
 
-        candidatePassengers.addAll(outsidePassengers);
+               ArrayList<Vertex> path = new ArrayList<>();
+               path.add(taxi.getPosition());
+               MoveOption option = computeBestScore(lookaheadDist, path, neighbor, taxi);
 
-        Vertex bestVertex = null;
-        int bestScore = Integer.MIN_VALUE;
-        MoveOption bestOption = null;        // Connected graph -> always neighbor -> never null.
+               boolean better;
+               if (option.getScore() > bestScore) {
+                   better = true;
+               } else if (option.getScore() == bestScore) {
 
-        for (Vertex neighbor : taxi.getPosition().getNeigbours()) {
-
-            ArrayList<Vertex> path = new ArrayList<>();
-            path.add(taxi.getPosition());
-            MoveOption option = computeBestScore(lookaheadDist, path, neighbor, taxi);
-
-            boolean better;
-            if (option.getScore() > bestScore) {
-                better = true;
-            } else if (option.getScore() == bestScore) {
-
-                //Need to tiebreak so that we don't always pick the same if the're literally equally good
+                /*//Need to tiebreak so that we don't always pick the same if the're literally equally good
                 if(bestOption.getToBeDropped().isEmpty() && bestOption.getToBePickedUp().isEmpty()) {
                     //current best doesn't have to drop/pickup passengers
                     if(!option.getToBePickedUp().isEmpty() || !option.getToBeDropped().isEmpty()) {
@@ -145,25 +141,64 @@ public class Algorithm_LSD extends Algorithm {
                         //cases are pretty (but not necessarily fully) equal, go random
                         better = sharedData.getRandom().nextBoolean();
                     }
-                }
-            } else {
-                better = false;
-            }
+                }*/
+                   better = false;
+               } else {
+                   better = false;
+               }
 
-            if(better) {
-                bestScore = option.getScore();
-                bestVertex = neighbor;
-                bestOption = option;
+               if (better) {
+                   bestScore = option.getScore();
+                   bestOption = option;
+               }
+           }
+
+           taxi.setPath(bestOption.getPath());
+           taxi.setTurnsLeft(Math.min(UPDATE_FREQUENCY, lookaheadDist));
+       }
+        taxi.setTurnsLeft(taxi.getTurnsLeft() - 1);
+
+        ArrayList<Pair<Integer,Customer>> candidates = new ArrayList<>();
+        for(Customer customer : taxi.getPassengers()) {
+            checkAddCustomer(candidates, customer, calculateCustomerScore(customer, taxi.getPath(), 0));
+        }
+
+        for(Customer customer : taxi.getPosition().getCustomers()) {
+            if(customer.hasBeenPickedUp()) continue;
+            checkAddCustomer(candidates, customer, calculateCustomerScore(customer, taxi.getPath(), 0));
+        }
+
+        ArrayList<Customer> toDropOff = new ArrayList<>();
+        ArrayList<Customer> toPickUp = new ArrayList<>();
+
+        //Build drop ones
+        for(Customer customer : taxi.getPassengers()) {
+            boolean contains = false;
+            for(Pair<Integer, Customer> pair : candidates) {
+                if(pair.getValue().equals(customer)) {
+                    contains = true;
+                    break;
+                }
+            }
+            if(!contains) {
+                toDropOff.add(customer);
+            }
+        }
+
+        //Build pickup ones
+        for(Customer customer : taxi.getPosition().getCustomers()) {
+            for(Pair<Integer, Customer> pair : candidates) {
+                if(pair.getValue().equals(customer)) {
+                    toPickUp.add(customer);
+                    break;
+                }
             }
         }
 
         boolean mayMove = true;
-
-
-
         int amountPassengers = taxi.getPassengers().size();
 
-        for(Customer customer : bestOption.getToBeDropped()) {
+        for(Customer customer : toDropOff) {
             customer.setHasBeenPickedUp(false);
             customer.setBeingHandled(false);
             amountPassengers--;
@@ -171,7 +206,7 @@ public class Algorithm_LSD extends Algorithm {
             minute.add(new Move('d', taxi, customer));
         }
 
-        for(Customer customer : bestOption.getToBePickedUp()) {
+        for(Customer customer : toPickUp) {
             if(amountPassengers < Taxi.MAX_CAPACITY) {
                 customer.setHasBeenPickedUp(true);
                 customer.setBeingHandled(true);
@@ -185,7 +220,10 @@ public class Algorithm_LSD extends Algorithm {
         }
 
         if (mayMove) {
-            minute.add(new Move(taxi, bestVertex));
+
+            taxi.getPath().remove(0);
+
+            minute.add(new Move(taxi, taxi.getPath().get(0)));
         }
     }
 
@@ -244,31 +282,8 @@ public class Algorithm_LSD extends Algorithm {
                 score += Math.max(0, candidate.getKey());
             }
 
-            //Build drop ones
-            for(Customer customer : taxi.getPassengers()) {
-                boolean contains = false;
-                for(Pair<Integer, Customer> pair : candidates) {
-                    if(pair.getValue().equals(customer)) {
-                        contains = true;
-                        break;
-                    }
-                }
-                if(!contains) {
-                    toDropOff.add(customer);
-                }
-            }
 
-            //Build pickup ones
-            for(Customer customer : taxi.getPosition().getCustomers()) {
-                for(Pair<Integer, Customer> pair : candidates) {
-                    if(pair.getValue().equals(customer)) {
-                        toPickUp.add(customer);
-                        break;
-                    }
-                }
-            }
-
-            //TODO Remove debug VVV
+            /* //TODO Remove debug VVV
             String debug = "T"+taxi.getOutputId()+"("+taxi.getPosition().getId()+")->("+path.get(1).getId()+")[";
             for(Customer c : taxi.getPassengers()) {
                 debug += c.getDestination().getId()+",";
@@ -286,9 +301,9 @@ public class Algorithm_LSD extends Algorithm {
                 debug += v.getId()+",";
             }
             debug += "]";
-            Main.debug(debug);
+            Main.debug(debug);*/
 
-            return new MoveOption(toDropOff, toPickUp, score);
+            return new MoveOption(path, score);
         }
     }
 
@@ -388,22 +403,16 @@ public class Algorithm_LSD extends Algorithm {
     }
 
     private class MoveOption {
-        private HashSet<Customer> toBeDropped;
-        private HashSet<Customer> toBePickedUp;
+        private ArrayList<Vertex> path;
         private int score;
 
-        public MoveOption(HashSet<Customer> toBeDropped, HashSet<Customer> toBePickedUp, int score) {
-            this.toBeDropped = toBeDropped;
-            this.toBePickedUp = toBePickedUp;
+        public MoveOption(ArrayList<Vertex> path, int score) {
+            this.path = path;
             this.score = score;
         }
 
-        public HashSet<Customer> getToBeDropped() {
-            return toBeDropped;
-        }
-
-        public HashSet<Customer> getToBePickedUp() {
-            return toBePickedUp;
+        public ArrayList<Vertex> getPath() {
+            return path;
         }
 
         public int getScore() {
