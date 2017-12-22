@@ -230,10 +230,6 @@ public class Algorithm_LSD extends Algorithm {
 
         if (mayMove) {
 
-            if(!taxi.getPosition().getNeigbours().contains(taxi.getPath().get(1))) {
-                System.out.println("[ERROR] Tried to move to non-adjacent vertex on pathsize " + taxi.getPath().size() + " left:"+taxi.getTurnsLeft());
-            }
-
             taxi.getPath().remove(0);
 
             minute.add(new Move(taxi, taxi.getPath().get(0)));
