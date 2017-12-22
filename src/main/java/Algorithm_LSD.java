@@ -44,12 +44,6 @@ public class Algorithm_LSD extends Algorithm {
         }
         Main.debug(debug+"] -------------------------");*/
 
-        for(Customer customer : sharedData.getCustomerList()) {
-            customer.setBeingHandled(customer.isInTaxi());
-            customer.setHasBeenPickedUp(customer.isInTaxi());
-        }
-
-
         //LDS On all taxis that have a customer to deliver or pick up
         for (Taxi taxi : sharedData.getTaxiList()) {
 
@@ -114,19 +108,18 @@ public class Algorithm_LSD extends Algorithm {
         return minute;
     }
 
+    //NOTE: This now doesn't look anymore at if an other taxi is also already going towards this customer
     private Customer findClosestCustomer(Taxi taxi) {
         Customer closest = null;
         int shortestDistance = Integer.MAX_VALUE;
 
         for (Customer customer : sharedData.getCustomerOutsideList()) {
-            if (!customer.isBeingHandled()) {
-                //If another taxi hasn't taken care of this customer yet (to prevent 2 taxis going to the same customer
-                int distance = sharedData.getGraph().getDistance(customer.getPosition(), taxi.getPosition());
+            //If another taxi hasn't taken care of this customer yet (to prevent 2 taxis going to the same customer
+            int distance = sharedData.getGraph().getDistance(customer.getPosition(), taxi.getPosition());
 
-                if (distance < shortestDistance) {
-                    closest = customer;
-                    shortestDistance = distance;
-                }
+            if (distance < shortestDistance) {
+                closest = customer;
+                shortestDistance = distance;
             }
         }
 
@@ -229,7 +222,6 @@ public class Algorithm_LSD extends Algorithm {
 
         for(Customer customer : toDropOff) {
             customer.setHasBeenPickedUp(false);
-            customer.setBeingHandled(false);
             amountPassengers--;
             mayMove = false;
             minute.add(new Move('d', taxi, customer));
@@ -238,7 +230,6 @@ public class Algorithm_LSD extends Algorithm {
         for(Customer customer : toPickUp) {
             if(amountPassengers < Taxi.MAX_CAPACITY) {
                 customer.setHasBeenPickedUp(true);
-                customer.setBeingHandled(true);
                 amountPassengers++;
                 mayMove = false;
                 minute.add(new Move('p', taxi, customer));
@@ -390,7 +381,9 @@ public class Algorithm_LSD extends Algorithm {
 
     @Override
     public void continueExecution(int upToMinute, HashMap<AlgoVar, Integer> lastUpdated) {
-
+        for(Customer customer : sharedData.getCustomerList()) {
+            customer.setHasBeenPickedUp(customer.isInTaxi());
+        }
     }
 
     /**
