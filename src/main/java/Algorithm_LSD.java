@@ -106,13 +106,6 @@ public class Algorithm_LSD extends Algorithm {
 
     private void addLsdMoves(ArrayList<Move> minute, Taxi taxi) {
        if(taxi.getTurnsLeft() <= 0) {
-           ArrayList<Customer> candidatePassengers = new ArrayList<>(taxi.getPassengers());
-
-           //TODO Exclude customers already picked up
-           ArrayList<Customer> outsidePassengers = new ArrayList<>(sharedData.getCustomerOutsideList());
-
-           candidatePassengers.addAll(outsidePassengers);
-
            Vertex bestVertex = null;
            int bestScore = Integer.MIN_VALUE;
            MoveOption bestOption = null;        // Connected graph -> always neighbor -> never null.
