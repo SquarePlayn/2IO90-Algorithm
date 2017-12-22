@@ -77,4 +77,13 @@ public class Preamble {
         Main.debug("Finished reading all node information");
     }
 
+    public static String getInformationString() {
+        return "A:" + alpha
+                + " Taxis:" + amountOfTaxis
+                + " CallMinutes:" + callMinutes
+                + " GraphSize:" + graphSize
+                + " maxTime:" + maxTime
+                + " testMinutes:" + testMinutes;
+    }
+
 }
