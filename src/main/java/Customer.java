@@ -42,6 +42,10 @@ public class Customer {
         }
     }
 
+    public Vertex getPositionVariable() {
+        return position;
+    }
+
     public boolean isAtDestination() {
         return getPosition().equals(destination) && !isInTaxi();
     }

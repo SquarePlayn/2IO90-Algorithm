@@ -107,7 +107,11 @@ public class Scheduler {
         if(sharedData.getGraph().getSize() > SHEDULE_CUTOFF) {
             activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
         } else {
-            activeAlgorithm = AlgorithmType.LSD;
+            if (Taxi.MAX_CAPACITY <= 5) {
+                activeAlgorithm = AlgorithmType.HUNGARIAN;
+            } else {
+                activeAlgorithm = AlgorithmType.LSD;
+            }
         }
 
         activeAlgorithm.getAlgorithm().initialize(sharedData);

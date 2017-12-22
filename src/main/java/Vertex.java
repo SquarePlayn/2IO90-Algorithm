@@ -15,6 +15,10 @@ public class Vertex {
     private HashMap<Integer, Vertex> nextTowards;
     private HashMap<Integer, Boolean> visited;
 
+    //BFS Improvements
+    boolean bfsStarted = false;
+    ArrayList<Vertex> queue;
+
 
     public Vertex(int id) {
         this.id = id;
@@ -29,13 +33,21 @@ public class Vertex {
     }
 
     public void updateDistanceInfo(Vertex startedPoint, int distance, Vertex nextTowards) {
+        setDistanceTo(startedPoint, distance);
+        setNextTowards(startedPoint, nextTowards);
+    }
+
+    public void setDistanceTo(Vertex startedPoint, int distance) {
         this.distanceTo.put(startedPoint.getId(), distance);
+    }
+
+    public void setNextTowards(Vertex startedPoint, Vertex nextTowards) {
         this.nextTowards.put(startedPoint.getId(), nextTowards);
     }
 
     public int getDistanceTo(Vertex vertex) {
         if(!distanceTo.containsKey(vertex.getId())) {
-            vertex.bfs();
+            vertex.bfs(this, true);
         }
 
         return distanceTo.get(vertex.getId());
@@ -43,7 +55,7 @@ public class Vertex {
 
     public Vertex getNextTowards(Vertex vertex) {
         if(!nextTowards.containsKey(vertex.getId())) {
-            vertex.bfs();
+            vertex.bfs(this, true);
         }
         return nextTowards.get(vertex.getId());
     }
@@ -72,20 +84,27 @@ public class Vertex {
      *  graph has been visited
      * Erases/overwrites any BSF results of earlier calls
      */
-    private void bfs() {
-        //Make an empty queue and array to keep track of which vertices we have already visited.
-        ArrayList<Vertex> queue = new ArrayList<>();
+    private void bfs(Vertex searchFor, boolean stopIfDone) {
+        if(!bfsStarted) {
+            //Make an empty queue and array to keep track of which vertices we have already visited.
+            queue = new ArrayList<>();
 
-        //Start with the start. Since we have added it now, set visited to true.
-        distanceTo.put(getId(), 0);
-        visited.put(getId(),true);
+            //Start with the start. Since we have added it now, set visited to true.
+            distanceTo.put(getId(), 0);
+            visited.put(getId(), true);
 
-        queue.add(this);
+            queue.add(this);
+            bfsStarted = true;
+        }
+
+        //Flip this if we have found "SearchFor" vertex
+        boolean foundDestination = false;
 
         //Now make sure we empty the whole queue, resulting on going over each vertice in the connected graph
-        while(!queue.isEmpty()) {
+        while(!queue.isEmpty() && !(foundDestination && stopIfDone)) {
             //Pop the item that is first up
             Vertex now = queue.remove(0);
+
 
             //For each connection:
             for(Vertex towards: now.getNeigbours()) {
@@ -98,7 +117,13 @@ public class Vertex {
                     towards.setVisited(this, true);
                     queue.add(towards);
                     towards.updateDistanceInfo(this, now.getDistanceTo(this)+1, now);
+                    this.setDistanceTo(towards, now.getDistanceTo(this)+1);
+
+                    if(towards.equals(searchFor)) {
+                        foundDestination = true;
+                    }
                 }
+
             }
         }
     }
