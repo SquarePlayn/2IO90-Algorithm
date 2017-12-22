@@ -28,6 +28,8 @@ public class Algorithm_Hungarian extends Algorithm {
     public ArrayList<Move> processMinute(boolean callsLeft) {
         ArrayList<Move> output = new ArrayList<>();
 
+        // First check whether a taxi has already arrived at the destination of the customer it wants to pick up.
+        // If that is the case it should be removed from the queue, so it won't get used by the Hungarian algo.
         for(Taxi taxi : taxiInOperationList) {
             if(taxi.getInOperation()
                     && taxi.getPosition().equals(taxi.getCustomer().getPosition())
@@ -36,6 +38,7 @@ public class Algorithm_Hungarian extends Algorithm {
 
                 taxiReadyQueue.remove(taxi);
                 customerQueue.remove(taxi.getCustomer());
+                // Clear its path, so the advanceTaxi knows we have to pick up a customer.
                 taxi.getPath().clear();
             }
         }
@@ -43,6 +46,7 @@ public class Algorithm_Hungarian extends Algorithm {
         if(!customerQueue.isEmpty() && !taxiReadyQueue.isEmpty()) {
             HashMap<Taxi, Customer> hungOut = applyHungarian();
 
+            // Bind all customers to taxis returned by the Hungarian Algorithm.
             for(Map.Entry<Taxi, Customer> entry : hungOut.entrySet()) {
                 Taxi taxi = entry.getKey();
                 Customer customer = entry.getValue();
@@ -90,10 +94,16 @@ public class Algorithm_Hungarian extends Algorithm {
                 var == AlgoVar.TAXI_PATH;
     }
 
+    /**
+     * Applies the Hungarian Algorithm on the current taxi and customer queue.
+     *
+     * @return A HashMap containing the best taxi/customer combinations.
+     */
     private HashMap<Taxi, Customer> applyHungarian() {
         HashMap<Taxi, Customer> output = new HashMap<>(taxiReadyQueue.size());
         double[][] costMatrix = new double[taxiReadyQueue.size()][customerQueue.size()];
 
+        // Calculate the cost matrix, using distances to the customer positions.
         for(int t = 0; t < taxiReadyQueue.size(); t++) {
             for(int c = 0; c < customerQueue.size(); c++) {
                 Taxi taxi = taxiReadyQueue.get(t);
@@ -103,14 +113,17 @@ public class Algorithm_Hungarian extends Algorithm {
             }
         }
 
+        // Execute the Hungarian Algorithm.
         HungarianAlgorithm ha = new HungarianAlgorithm(costMatrix);
         int[] result = ha.execute();
 
+        // Analyse the result and populate the resulting HashMap.
         for(int t = 0; t < result.length; t++) {
             Taxi taxi = taxiReadyQueue.get(t);
             int c = result[t];
 
             if(c == -1) {
+                // This taxi does not have a task, make sure it's not in operation anymore in case it was before.
                 taxi.setInOperation(false);
                 continue;
             }
@@ -187,7 +200,6 @@ public class Algorithm_Hungarian extends Algorithm {
                 taxiReadyQueue.add(taxi);
             }
         }
-
     }
 
 
