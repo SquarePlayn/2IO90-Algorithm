@@ -51,6 +51,8 @@ public class Scheduler {
         //From here on, the Actual calling and being called of taxis starts
         initializeTaxis();
 
+        sharedData.getGraph().buildHubs(sharedData.getRandom());
+
         //TODO Make sure to redecide which algorithm to use at certain times
         //TODO Make sure in reschedule that algo initialised and up to date
         reschedule();
@@ -117,7 +119,14 @@ public class Scheduler {
         //TODO Set to use IOHistory
         Main.debug("Starting initialize taxis");
 
-        String output = initializeTaxis_random();
+        String output;
+
+        if(Preamble.amountOfTaxis > sharedData.getGraph().getSize()/2) {
+            output = initializeTaxis_random();
+        } else {
+            output = initializeTaxis_hubs();
+        }
+
         output += "c";
 
         Main.debug("InitialiseTaxis() is now outputting "+output);
@@ -143,6 +152,25 @@ public class Scheduler {
         }
 
         return output.toString();
+    }
+
+    private String initializeTaxis_hubs() {
+        Main.debug("Using the hubs() type of taxi distribution");
+        sharedData.getGraph().buildHubs(sharedData.getRandom());
+
+        StringBuilder output = new StringBuilder();
+        for(Taxi taxi : sharedData.getTaxiList()) {
+            taxi.setPosition(sharedData.getGraph().getHub(
+                    taxi.getId() % sharedData.getGraph().getHubs().size()));
+            output.append("m ")
+                    .append(taxi.getOutputId())
+                    .append(" ")
+                    .append(taxi.getPosition().getId())
+                    .append(" ");
+        }
+
+        return output.toString();
+
     }
 
     /**

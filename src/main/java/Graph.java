@@ -1,11 +1,21 @@
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 
 public class Graph {
 
     private ArrayList<Vertex> vertices;
 
+    //Needed for the organizing of hubs code
+    private ArrayList<Vertex> hubs;
+    private int HUB_RADIUS = 4;
+    private static final boolean HUB_OVERWRITE_SET = true; // If, when finding a vertex is closer to another hub,
+    // it should be assigned to the closer one
+    private static final boolean HUB_OVERWRITE_RECURSE = true; // If when you find a closer one, you also check its neighbours
+
     Graph() {
         this.vertices = new ArrayList<>();
+        this.hubs = new ArrayList<>();
     }
 
     /**
@@ -93,4 +103,94 @@ public class Graph {
         return path;
     }
 
+    public ArrayList<Vertex> getHubs() {
+        return hubs;
+    }
+
+    public Vertex getHub(int hubID) {
+        return hubs.get(hubID);
+    }
+
+    public void addHub(Vertex vertex) {
+        vertex.initializeHub(hubs.size());
+        hubs.add(vertex);
+    }
+
+    public int getHUB_RADIUS() {
+        return HUB_RADIUS;
+    }
+
+    public void setHUB_RADIUS(int HUB_RADIUS) {
+        this.HUB_RADIUS = HUB_RADIUS;
+    }
+
+    /**
+     * Build all the hubs
+     * @param random the randomness decider from sharedData
+     */
+    public void buildHubs(Random random) {
+
+        if(hubs.size() > 0) {
+            Main.debug("Requested to build hubs while already built");
+            return;
+        }
+
+        //First make an array that will have the vertice IDs in random order
+        ArrayList<Integer> randomOrder = new ArrayList<Integer>(getSize());
+        for(int i=0; i<getSize(); i++) {
+            randomOrder.add(i);
+        }
+        Collections.shuffle(randomOrder, random);
+
+        //Go over each vertice in a random-like order
+        for(int i=0; i<getSize(); i++) {
+            Vertex checkVertice = getVertex(randomOrder.get(i));
+
+            //Only advance if it doesn't already belong to a hub
+            if(checkVertice.getHubID() < 0) {
+                Vertex newHub = checkVertice;
+                //If not, make it a new hub and go over the radius
+                addHub(newHub);
+
+                ArrayList<Vertex> queue = new ArrayList<>();
+                queue.add(newHub);
+
+                while (!queue.isEmpty()) {
+                    Vertex v = queue.remove(0);
+
+                    for(Vertex neighbour : v.getNeigbours()) {
+                        if(neighbour.getHubID() != v.getHubID()) {
+                            //We are not going backwards
+
+                            if (neighbour.getDistToHubCenter() <= v.getDistToHubCenter()) {
+                                //This one is as close or closer to the new hub (may just be a new one)
+                                if(neighbour.getHubID() < 0 || HUB_OVERWRITE_SET) {
+                                    //Update all the new values
+
+                                    if(neighbour.getHubID() >= 0) {
+                                        //Remove it from the old hub first
+                                        neighbour.getHub().removeHubVertice(neighbour);
+                                    }
+
+                                    newHub.addHubVertice(neighbour); //Add to the new hub
+                                    neighbour.setHub(newHub); //Set to the new hub
+                                    neighbour.setHubID(newHub.getHubID()); // and its ID
+                                    neighbour.setDistToHubCenter(v.getDistToHubCenter()+1);
+                                    neighbour.setVertexTowardsCenter(v);
+
+                                    //Check if we should recurse
+                                    if(neighbour.getDistToHubCenter() < HUB_RADIUS &&
+                                            (neighbour.getHubID() < 0 || HUB_OVERWRITE_RECURSE)) {
+                                        //We are not done with the radios and we should recurse
+                                        queue.add(neighbour);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    }
 }
