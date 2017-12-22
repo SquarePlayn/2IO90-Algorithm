@@ -11,7 +11,12 @@ public class Taxi {
     // Needed for ALGO SimpleQueue
     private Customer customer; // Which customer we're on our way to pick up.
     private boolean inOperation; // Is doing something
+
+    //Used by both LSD and SimpleQueue
     private ArrayList<Vertex> path; // Either the path towards the customer or the goal, depending on current state.
+
+    // Needed for LSD.
+    private int turnsLeft = -1;
 
     public Taxi(int id) {
         this.id = id;
@@ -103,4 +108,11 @@ public class Taxi {
         this.path = path;
     }
 
+    public int getTurnsLeft() {
+        return turnsLeft;
+    }
+
+    public void setTurnsLeft(int turnsLeft) {
+        this.turnsLeft = turnsLeft;
+    }
 }

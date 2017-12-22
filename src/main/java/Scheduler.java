@@ -3,7 +3,7 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class Scheduler {
-    private static final int SHEDULE_CUTOFF = 1;
+    private static final int SHEDULE_CUTOFF = 1024;
 
     private TaxiScanner scanner;
     private SharedData sharedData;
@@ -78,9 +78,13 @@ public class Scheduler {
         //TODO Add something better
 
         if(sharedData.getGraph().getSize() > SHEDULE_CUTOFF) {
-            activeAlgorithm = AlgorithmType.HUNGARIAN;
+            activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
         } else {
-            activeAlgorithm = AlgorithmType.LSD;
+            if (Taxi.MAX_CAPACITY <= 5) {
+                activeAlgorithm = AlgorithmType.HUNGARIAN;
+            } else {
+                activeAlgorithm = AlgorithmType.LSD;
+            }
         }
 
         if(!activeAlgorithm.getAlgorithm().isInitialized()){

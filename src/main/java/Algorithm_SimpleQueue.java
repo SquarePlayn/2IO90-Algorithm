@@ -9,7 +9,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
     @Override
     public void readMinute(ArrayList<Call> calls) {
-        for(Call call : calls) {
+        for (Call call: calls) {
             customerQueue.add(call.getCustomer());
         }
     }
@@ -22,6 +22,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
         taxiInOperationList = new ArrayList<>();
 
         taxiReadyQueue.addAll(sharedData.getTaxiList()); // Initially all taxis are unoccupied, so add them all to the ready queue.
+
     }
 
     @Override
@@ -29,13 +30,20 @@ public class Algorithm_SimpleQueue extends Algorithm {
         // First assign a taxi to each waiting customer as far as possible
         // Loop until there are no customers waiting anymore.
         // If there are no more ready taxis, the remaining customers will have to wait
-        while(!customerQueue.isEmpty() && !taxiReadyQueue.isEmpty()) {
+
+        for(Customer customer : sharedData.getCustomerOutsideList()) {
+            customer.setBeingHandled(false);
+        }
+
+        while (!customerQueue.isEmpty() && !taxiReadyQueue.isEmpty()) {
             // Get the first-up taxi, pop it from the queue and add it to the ones in operation
+
             Taxi taxi = taxiReadyQueue.remove(0);
             taxiInOperationList.add(taxi);
 
             // Pop the customer that is first-up
-            Customer customer = customerQueue.remove(0);
+            Customer customer = findClosestCustomer(taxi);
+            customerQueue.remove(customer);
 
             //Assign the taxi to the customer and make the taxi go towards the customer
             taxi.setCustomer(customer);
@@ -46,11 +54,11 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
         // Advance all taxis that have an operation
         ArrayList<Move> output = new ArrayList<>();
-        for(int i = 0; i < taxiInOperationList.size(); i++) {
+        for (int i=0; i<taxiInOperationList.size(); i++) {
             Taxi taxi = taxiInOperationList.get(i);
             output.addAll(advanceTaxi(taxi));
 
-            if(!taxi.getInOperation()) {
+            if (!taxi.getInOperation()) {
                 // If the taxi is now done delivering its client, we can put it back in the queue
                 taxiInOperationList.remove(taxi);
                 i--;
@@ -81,13 +89,13 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
         //Sanitycheck if we are indeed in operation
         if(taxi.getInOperation()) {
-            if(!taxi.getPath().isEmpty()) {
+            if (!taxi.getPath().isEmpty()) {
 
                 //We are still driving. Advance to next spot
                 output.add(new Move(taxi, taxi.getPath().remove(0)));
 
             } else {
-                if(taxi.getPassengers().isEmpty()) {
+                if (taxi.getPassengers().isEmpty()) {
                     //We still have to pick up the passenger
 
                     //TODO Sanitycheck if customer is indeed at the position we are at
@@ -99,7 +107,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
                     //We are done driving, and have already picked up our customer, so that means we are at the destination
                     // so we can drop the customer of
 
-                    output.add(new Move('d', taxi, taxi.getCustomer()));
+                    output.add(new Move('d',taxi, taxi.getCustomer()));
                 }
             }
         }
@@ -110,7 +118,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
     private void processMoves(ArrayList<Move> moves) {
 
-        for(Move move : moves) {
+        for(Move move: moves) {
             char action = move.getAction();
             Taxi taxi = move.getTaxi();
 
@@ -141,6 +149,24 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
     }
 
+    private Customer findClosestCustomer(Taxi taxi) {
+        Customer closest = null;
+        int shortestDistance = Integer.MAX_VALUE;
+
+        for (Customer customer : customerQueue) {
+            if (!customer.isBeingHandled()) {
+                //If another taxi hasn't taken care of this customer yet (to prevent 2 taxis going to the same customer
+                int distance = sharedData.getGraph().getDistance(customer.getPosition(), taxi.getPosition());
+
+                if (distance < shortestDistance) {
+                    closest = customer;
+                    shortestDistance = distance;
+                }
+            }
+        }
+
+        return closest;
+    }
 
     @Override
     public void continueExecution(int uptoMinute, HashMap<AlgoVar, Integer> lastUpdated) {
@@ -148,7 +174,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
         // TODO use lastUpdated.
 
-        for(int i = lastUpdatedMinute + 1; i < uptoMinute; i++) {
+        for (int i = lastUpdatedMinute + 1; i < uptoMinute; i++) {
             Minute minute = sharedData.getIOHistory().getMinute(i);
             readMinute(minute.getCalls());
             processMoves(minute.getMoves());

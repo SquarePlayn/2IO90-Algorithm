@@ -1,6 +1,6 @@
 public class Main {
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     private TaxiScanner scanner;
     private Preamble preamble;

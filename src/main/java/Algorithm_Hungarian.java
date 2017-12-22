@@ -231,7 +231,7 @@ public class Algorithm_Hungarian extends Algorithm {
      *
      * @author Kevin L. Stern
      */
-    private class HungarianAlgorithm {
+    public static class HungarianAlgorithm {
         private final double[][] costMatrix;
         private final int rows, cols, dim;
         private final double[] labelByWorker, labelByJob;
@@ -250,7 +250,7 @@ public class Algorithm_Hungarian extends Algorithm {
          *          irregular in the sense that all rows must be the same length; in
          *          addition, all entries must be non-infinite numbers.
          */
-        private HungarianAlgorithm(double[][] costMatrix) {
+        public HungarianAlgorithm(double[][] costMatrix) {
             this.dim = Math.max(costMatrix.length, costMatrix[0].length);
             this.rows = costMatrix.length;
             this.cols = costMatrix[0].length;
@@ -310,7 +310,7 @@ public class Algorithm_Hungarian extends Algorithm {
          *         provided cost matrix. A matching value of -1 indicates that the
          *         corresponding worker is unassigned.
          */
-        private int[] execute() {
+        public int[] execute() {
             /*
              * Heuristics to improve performance: Reduce rows and columns by their
              * smallest element, compute an initial non-zero dual feasible solution and
