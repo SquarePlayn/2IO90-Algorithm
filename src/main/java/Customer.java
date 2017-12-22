@@ -10,6 +10,7 @@ public class Customer {
     //Needed by LSD. Keeps track of if another taxi already handles this customer. Does not need updating between minutes
     private boolean hasBeenPickedUp;
     private boolean hasBeenChecked;
+    private boolean isBeingHandled;
 
     public Customer(Vertex initialPosition, Vertex destination, int creationMinute) {
         this.initialPosition = initialPosition;
@@ -19,6 +20,7 @@ public class Customer {
         this.position.addCustomer(this);
         this.hasBeenChecked = false;
         this.hasBeenPickedUp = false;
+        this.isBeingHandled = false;
     }
 
     public void drop(Vertex position) {
@@ -85,5 +87,13 @@ public class Customer {
 
     public void setHasBeenChecked(boolean hasBeenChecked) {
         this.hasBeenChecked = hasBeenChecked;
+    }
+
+    public boolean isBeingHandled() {
+        return isBeingHandled;
+    }
+
+    public void setBeingHandled(boolean beingHandled) {
+        isBeingHandled = beingHandled;
     }
 }

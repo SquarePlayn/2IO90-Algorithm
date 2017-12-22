@@ -1,5 +1,4 @@
 import javafx.util.Pair;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -474,7 +473,7 @@ public class Algorithm_LSD extends Algorithm {
             int c = result[t];
 
             if(c == -1) {
-                // This taxi does not have a task, make sure it's not in operation anymore in case it was before.
+                // This taxi does not have a task
                 continue;
             }
 
