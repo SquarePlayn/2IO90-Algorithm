@@ -1,14 +1,17 @@
 import javafx.util.Pair;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Algorithm_LSD extends Algorithm {
 
-    private static final int RECURSE_MODIFIER = 13;
+    private static final int RECURSE_MODIFIER = 11;
     private static final int MAX_LOOKAHEAD = 7;
     private static final int UPDATE_FREQUENCY = 1;
     private int lookaheadDist = 5;
     //The length of the path that the algo will consider ( min = 1 = only check neighbours).
+
+    private ArrayList<Customer> customerOutsideList;
 
     private static final int DESTINATION_WEIGHT = 3;
     // How much is added to the score for each part of the path a customer would not travel over because it has been delivered
@@ -16,11 +19,15 @@ public class Algorithm_LSD extends Algorithm {
 
     @Override
     public void readMinute(ArrayList<Call> calls) {
-
+        for(Call call : calls) {
+            customerOutsideList.add(call.getCustomer());
+        }
     }
 
     @Override
     public void setup() {
+        customerOutsideList = new ArrayList<>(sharedData.getCustomerOutsideList());
+
         int posLookahead = RECURSE_MODIFIER -(int)(Math.log(sharedData.getGraph().getSize())/Math.log(2));
         setLookaheadDist(lookaheadDist = Math.max(1,Math.min(MAX_LOOKAHEAD,posLookahead)));
         Main.debug("Chose lookahead distance of "+lookaheadDist);
@@ -42,13 +49,15 @@ public class Algorithm_LSD extends Algorithm {
             customer.setHasBeenPickedUp(customer.isInTaxi());
         }
 
+
+        //LDS On all taxis that have a customer to deliver or pick up
         for (Taxi taxi : sharedData.getTaxiList()) {
 
             if (taxi.getPassengers().isEmpty()) {
                 //Empty taxi, we must pick someone up
 
                 if (taxi.getPosition().getCustomers().isEmpty()) {
-                    Customer closestCustomer = findClosestCustomer(taxi);
+                    /*Customer closestCustomer = findClosestCustomer(taxi);
 
                     if (closestCustomer == null) {
                         //Nobody to pickup, this taxi has nothing to do so lets wait
@@ -62,7 +71,7 @@ public class Algorithm_LSD extends Algorithm {
                     taxi.setTurnsLeft(0);
 
                     //Let other taxis know we've got this person covered
-                    closestCustomer.setBeingHandled(true);
+                    closestCustomer.setBeingHandled(true);*/
 
                     continue;
                 } else {
@@ -78,6 +87,26 @@ public class Algorithm_LSD extends Algorithm {
 
             // Taxi has at least one passenger in our taxi or on our spot.
             addLsdMoves(minute, taxi);
+        }
+
+        // Handle all other taxis that still need to move towards a customer.
+
+        //Build 2 lists: Taxis in operation and taxis not in operation (= have customer in or on spot)
+        List<Taxi> taxisNotInOperation = sharedData.getTaxiList().stream()
+                .filter(taxi -> taxi.getPassengers().isEmpty() && taxi.getPosition().getCustomers().isEmpty())
+                .collect(Collectors.toList());
+
+        //For taxis not in operation: Do hungarian (or not) and make the taxis move over there.
+        if(!(taxisNotInOperation.isEmpty() || customerOutsideList.isEmpty())) {
+            HashMap<Taxi, Customer> hungOut = applyHungarian(taxisNotInOperation, customerOutsideList);
+
+            for (Map.Entry<Taxi, Customer> entry : hungOut.entrySet()) {
+                Taxi taxi = entry.getKey();
+                Customer customer = entry.getValue();
+                Vertex nextTowardsCustomer = taxi.getPosition().getNextTowards(customer.getPosition());
+
+                minute.add(new Move(taxi, nextTowardsCustomer));
+            }
         }
 
         processMoves(minute);
@@ -249,8 +278,6 @@ public class Algorithm_LSD extends Algorithm {
         } else {
 
             int score = 0;
-            HashSet<Customer> toPickUp = new HashSet<>();
-            HashSet<Customer> toDropOff = new HashSet<>();
 
             //Reset all the HasBeenChecked scores for the outside people
             for(Vertex v : path) {
@@ -387,12 +414,17 @@ public class Algorithm_LSD extends Algorithm {
 
                 //Picking up a passenger
                 taxi.pickup(customer, sharedData);
+                customerOutsideList.remove(customer); //TODO Find better way
 
             } else if (action == 'd') {
                 Customer customer = move.getCustomer();
 
                 //Dropping off a passenger
                 taxi.drop(customer, sharedData);
+
+                if(!customer.isAtDestination()) {
+                    customerOutsideList.add(customer);
+                }
             }
         }
 
@@ -418,6 +450,47 @@ public class Algorithm_LSD extends Algorithm {
         public int getScore() {
             return score;
         }
+    }
+
+    /**
+     * Applies the Hungarian Algorithm on the current taxi and customer queue.
+     *
+     * @return A HashMap containing the best taxi/customer combinations.
+     */
+    private HashMap<Taxi, Customer> applyHungarian(List<Taxi> taxiReadyQueue, List<Customer> customerQueue) {
+        HashMap<Taxi, Customer> output = new HashMap<>();
+        double[][] costMatrix = new double[taxiReadyQueue.size()][customerQueue.size()];
+
+        // Calculate the cost matrix, using distances to the customer positions.
+        for(int t = 0; t < taxiReadyQueue.size(); t++) {
+            for(int c = 0; c < customerQueue.size(); c++) {
+                Taxi taxi = taxiReadyQueue.get(t);
+                Customer customer = customerQueue.get(c);
+
+                costMatrix[t][c] = taxi.getPosition().getDistanceTo(customer.getPosition());
+            }
+        }
+
+        // Execute the Hungarian Algorithm.
+        Algorithm_Hungarian.HungarianAlgorithm ha = new Algorithm_Hungarian.HungarianAlgorithm(costMatrix);
+        int[] result = ha.execute();
+
+        // Analyse the result and populate the resulting HashMap.
+        for(int t = 0; t < result.length; t++) {
+            Taxi taxi = taxiReadyQueue.get(t);
+            int c = result[t];
+
+            if(c == -1) {
+                // This taxi does not have a task, make sure it's not in operation anymore in case it was before.
+                continue;
+            }
+
+            Customer customer = customerQueue.get(c);
+
+            output.put(taxi, customer);
+        }
+
+        return output;
     }
 
 }
