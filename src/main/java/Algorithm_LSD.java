@@ -105,28 +105,20 @@ public class Algorithm_LSD extends Algorithm {
     }
 
     private void addLsdMoves(ArrayList<Move> minute, Taxi taxi) {
-        if(taxi.getTurnsLeft() <= 0) {
-            ArrayList<Customer> candidatePassengers = new ArrayList<>(taxi.getPassengers());
+       if(taxi.getTurnsLeft() <= 0) {
+           int bestScore = Integer.MIN_VALUE;
+           MoveOption bestOption = null;        // Connected graph -> always neighbor -> never null.
 
-            //TODO Exclude customers already picked up
-            ArrayList<Customer> outsidePassengers = new ArrayList<>(sharedData.getCustomerOutsideList());
+           for (Vertex neighbor : taxi.getPosition().getNeigbours()) {
 
-            candidatePassengers.addAll(outsidePassengers);
+               ArrayList<Vertex> path = new ArrayList<>();
+               path.add(taxi.getPosition());
+               MoveOption option = computeBestScore(lookaheadDist, path, neighbor, taxi);
 
-            Vertex bestVertex = null;
-            int bestScore = Integer.MIN_VALUE;
-            MoveOption bestOption = null;        // Connected graph -> always neighbor -> never null.
-
-            for (Vertex neighbor : taxi.getPosition().getNeigbours()) {
-
-                ArrayList<Vertex> path = new ArrayList<>();
-                path.add(taxi.getPosition());
-                MoveOption option = computeBestScore(lookaheadDist, path, neighbor, taxi);
-
-                boolean better;
-                if (option.getScore() > bestScore) {
-                    better = true;
-                } else if (option.getScore() == bestScore) {
+               boolean better;
+               if (option.getScore() > bestScore) {
+                   better = true;
+               } else if (option.getScore() == bestScore) {
 
                 /*//Need to tiebreak so that we don't always pick the same if the're literally equally good
                 if(bestOption.getToBeDropped().isEmpty() && bestOption.getToBePickedUp().isEmpty()) {
@@ -150,21 +142,20 @@ public class Algorithm_LSD extends Algorithm {
                         better = sharedData.getRandom().nextBoolean();
                     }
                 }*/
-                    better = false;
-                } else {
-                    better = false;
-                }
+                   better = false;
+               } else {
+                   better = false;
+               }
 
-                if (better) {
-                    bestScore = option.getScore();
-                    bestVertex = neighbor;
-                    bestOption = option;
-                }
-            }
+               if (better) {
+                   bestScore = option.getScore();
+                   bestOption = option;
+               }
+           }
 
-            taxi.setPath(bestOption.getPath());
-            taxi.setTurnsLeft(Math.min(UPDATE_FREQUENCY, lookaheadDist));
-        }
+           taxi.setPath(bestOption.getPath());
+           taxi.setTurnsLeft(Math.min(UPDATE_FREQUENCY, lookaheadDist));
+       }
         taxi.setTurnsLeft(taxi.getTurnsLeft() - 1);
 
         ArrayList<Pair<Integer,Customer>> candidates = new ArrayList<>();
