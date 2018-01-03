@@ -136,7 +136,7 @@ public class Graph {
         }
 
         //First make an array that will have the vertice IDs in random order
-        ArrayList<Integer> randomOrder = new ArrayList<Integer>(getSize());
+        ArrayList<Integer> randomOrder = new ArrayList<>(getSize());
         for(int i=0; i<getSize(); i++) {
             randomOrder.add(i);
         }
@@ -162,30 +162,89 @@ public class Graph {
                         if(neighbour.getHubID() != v.getHubID()) {
                             //We are not going backwards
 
-                            if (neighbour.getDistToHubCenter() <= v.getDistToHubCenter()) {
-                                //This one is as close or closer to the new hub (may just be a new one)
-                                if(neighbour.getHubID() < 0 || HUB_OVERWRITE_SET) {
-                                    //Update all the new values
+                            if ((neighbour.getHubID() < 0 ||
+                                    (v.getDistToHubCenter() + 1 < neighbour.getDistToHubCenter() && HUB_OVERWRITE_SET)) &&
+                                    v.getDistToHubCenter() < HUB_RADIUS) {
+                                //(New un-hubbed node or
+                                // closer to new hub than old hub it was already assigned to and overwrite-setting is true)
+                                //and not outside of the radius of the hub
 
-                                    if(neighbour.getHubID() >= 0) {
-                                        //Remove it from the old hub first
-                                        neighbour.getHub().removeHubVertice(neighbour);
-                                    }
+                                boolean wasUnassigned = neighbour.getHubID() < 0;
 
-                                    newHub.addHubVertice(neighbour); //Add to the new hub
-                                    neighbour.setHub(newHub); //Set to the new hub
-                                    neighbour.setHubID(newHub.getHubID()); // and its ID
-                                    neighbour.setDistToHubCenter(v.getDistToHubCenter()+1);
-                                    neighbour.setVertexTowardsCenter(v);
+                                //Update all the new values
 
-                                    //Check if we should recurse
-                                    if(neighbour.getDistToHubCenter() < HUB_RADIUS &&
-                                            (neighbour.getHubID() < 0 || HUB_OVERWRITE_RECURSE)) {
-                                        //We are not done with the radios and we should recurse
-                                        queue.add(neighbour);
+                                if (neighbour.getHubID() >= 0) {
+                                    //If it was previously assigned to a hub already
+                                    //Remove it from the old hub first
+                                    neighbour.getHub().removeHubVertice(neighbour);
+                                }
+
+                                newHub.addHubVertice(neighbour); //Add to the new hubs list
+                                neighbour.setHub(newHub); //Set vertice-hubvalue to the new hub
+                                neighbour.setHubID(newHub.getHubID()); // and its ID
+                                neighbour.setDistToHubCenter(v.getDistToHubCenter() + 1);
+                                neighbour.setVertexTowardsCenter(v);
+
+                                //Check if we should recurse
+                                if (neighbour.getDistToHubCenter() <= HUB_RADIUS &&
+                                        (wasUnassigned || HUB_OVERWRITE_RECURSE)) {
+                                    //We are not done with the radios and we should recurse
+                                    queue.add(neighbour);
+                                }
+                            } else {
+                                // Not expanding onto this neighbour
+
+                                if(neighbour.getHubID() >= 0) {
+                                    //This node was assigned to some hub
+
+                                    //AdjacentHubs
+                                    v.getHub().addAdjacentHub(neighbour.getHub());
+                                    neighbour.getHub().addAdjacentHub(v.getHub());
+
+                                    int newDist = v.getDistToHubCenter() + neighbour.getDistToHubCenter() + 1;
+
+                                    if(newDist < v.getHub().getDistanceTo(neighbour.getHub())) {
+                                        //New distance is smaller than the old one, update
+                                        v.getHub().setDistanceToHubCenter(neighbour.getHub(), newDist);
+                                        neighbour.getHub().setDistanceToHubCenter(v.getHub(), newDist);
+
+                                        //also update pathToHubCenter
+                                        ArrayList<Vertex> path = new ArrayList<>();
+
+                                        //Make path v -> vHub
+                                        Vertex pathVert = v;
+                                        while(!pathVert.equals(v.getHub())) {
+                                            path.add(pathVert);
+                                            pathVert = pathVert.getVertexTowardsCenter();
+                                        }
+
+                                        Collections.reverse(path); //Turn it around so now it's vHub -> v
+
+                                        //Add neighbour -> neighbourHub to the path
+                                        pathVert = neighbour;
+                                        while(!pathVert.equals(neighbour.getHub())) {
+                                            path.add(pathVert);
+                                            pathVert = pathVert.getVertexTowardsCenter();
+                                        }
+
+                                        //Now we have the path excluding the end hubs from vHub -> neighbourHub.
+
+                                        //Make a new one that goes neighbourHub -> vHub.
+                                        ArrayList<Vertex> pathBack = new ArrayList<>(path);
+                                        Collections.reverse(pathBack);
+
+                                        //Add the correct end bits
+                                        path.add(neighbour.getHub());
+                                        pathBack.add(v.getHub());
+
+                                        //Now set the paths in the hubs
+                                        v.getHub().setPathToHubCenter(neighbour.getHub(), path);
+                                        neighbour.getHub().setPathToHubCenter(v.getHub(), pathBack);
+
                                     }
                                 }
                             }
+
                         }
                     }
                 }

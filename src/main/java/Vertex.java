@@ -226,7 +226,7 @@ public class Vertex {
     }
 
     public int getDistanceToHubCenter(Vertex hub) {
-        return distanceToHubCenter.get(hub.getHubID());
+        return distanceToHubCenter.getOrDefault(hub.getHubID(), Integer.MAX_VALUE);
     }
 
     public void setDistanceToHubCenter(Vertex hub, int dist) {
@@ -234,7 +234,7 @@ public class Vertex {
     }
 
     public ArrayList<Vertex> getPathToHubCenter(Vertex hub) {
-        return pathToHubCenter.get(hub.getHubID());
+        return pathToHubCenter.getOrDefault(hub.getHubID(), null);
     }
 
     public void setPathToHubCenter(Vertex hub, ArrayList<Vertex> pathToHubCenter) {
