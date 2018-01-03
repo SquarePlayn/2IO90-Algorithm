@@ -27,6 +27,10 @@ public class Vertex {
     private HashMap<Integer, Integer> distanceToHubCenter;
     private HashMap<Integer, ArrayList<Vertex>> pathToHubCenter;
 
+    //K-Center variables
+    private boolean isKCenter;
+    private int distToKCenter;
+
     //BFS Improvements
     boolean bfsStarted = false;
     ArrayList<Vertex> queue;
@@ -48,6 +52,9 @@ public class Vertex {
         distToHubCenter = -1;
         vertexTowardsCenter = null;
         hub = null;
+
+        isKCenter = false;
+        distToKCenter = -1;
     }
 
     public void initializeHub(int hubID) {
@@ -263,5 +270,24 @@ public class Vertex {
 
     public void setHub(Vertex hub) {
         this.hub = hub;
+    }
+
+    public int getDistToKCenter() {
+        return distToKCenter;
+    }
+
+    public void setDistToKCenter(int distToKCenter) {
+        this.distToKCenter = distToKCenter;
+    }
+
+    public boolean isKCenter() {
+        return isKCenter;
+    }
+
+    public void setKCenter(boolean kCenter) {
+        isHubCenter = kCenter;
+        if(kCenter) {
+            setDistToKCenter(0);
+        }
     }
 }

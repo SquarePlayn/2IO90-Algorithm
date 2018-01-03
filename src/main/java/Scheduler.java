@@ -1,3 +1,5 @@
+import com.sun.org.apache.xpath.internal.SourceTree;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -14,6 +16,9 @@ public class Scheduler {
 
     private int currentMinute;
 
+    //TODO: pls delete
+    public static long time_kcenters;
+
     public Scheduler(TaxiScanner scanner) {
         this.scanner = scanner;
         this.sharedData = new SharedData(Preamble.graph);
@@ -27,6 +32,46 @@ public class Scheduler {
         createTaxiList();
         testMinutes();
         realMinutes();
+
+        /**public static long time_taxi_has_arrived = 0;
+         * public static long time_match_entities = 0;
+         * public static long time_advance_taxis = 0;
+         * public static long time_process_moves = 0;
+         */
+
+        // output
+        double process_minute = (double) (Algorithm_Hungarian.time_process_minute / 1000000000.0);
+        double match_entities = (double) (Algorithm_Hungarian.time_match_entities / 1000000000.0);
+        double new_ha_class_instance = (double) (Algorithm_Hungarian.time_new_ha_class_instance / 1000000000.0);
+        double apply_hungarian = (double) (Algorithm_Hungarian.time_apply_hungarian / 1000000000.0);
+        double execute_hungarian = (double) (Algorithm_Hungarian.time_execute_hungarian / 1000000000.0);
+        double reduce = (double) (Algorithm_Hungarian.time_reduce / 1000000000.0);
+        double compute_initial = (double) (Algorithm_Hungarian.time_compute_initial / 1000000000.0);
+        double greedy_match = (double) (Algorithm_Hungarian.time_greedy_match / 1000000000.0);
+        double rest_of_loop = (double) (Algorithm_Hungarian.time_rest_of_loop / 1000000000.0);
+        double kcenters = (double) (time_kcenters / 1000000000.0);
+
+
+        System.out.println(process_minute);
+        System.out.println(match_entities);
+        System.out.println(apply_hungarian);
+        System.out.println("\n");
+        System.out.println(new_ha_class_instance);
+        System.out.println(execute_hungarian);
+        System.out.println("\n");
+        System.out.println(reduce);
+        System.out.println(compute_initial);
+        System.out.println(greedy_match);
+        System.out.println(rest_of_loop);
+
+        System.out.println("Find K-centers:" + kcenters + "s");
+        ArrayList<Vertex> kCentersVertices = new ArrayList<>();
+        kCentersVertices = sharedData.getGraph().getkCenters();
+        ArrayList<Integer> kCentersIds = new ArrayList<>();
+        for(int i=0; i<kCentersVertices.size(); i++) {
+            kCentersIds.add(kCentersVertices.get(i).getId());
+        }
+        System.out.println(kCentersIds.toString());
     }
 
     /**
@@ -52,6 +97,10 @@ public class Scheduler {
         initializeTaxis();
 
         sharedData.getGraph().buildHubs(sharedData.getRandom());
+
+        long start = System.nanoTime();
+        sharedData.getGraph().findKCenters();
+        time_kcenters += System.nanoTime() - start;
 
         //TODO Make sure to redecide which algorithm to use at certain times
         //TODO Make sure in reschedule that algo initialised and up to date
@@ -88,6 +137,8 @@ public class Scheduler {
                 activeAlgorithm = AlgorithmType.LSD;
             }
         }
+
+        activeAlgorithm = AlgorithmType.HUNGARIAN;
 
         if(!activeAlgorithm.getAlgorithm().isInitialized()){
             activeAlgorithm.getAlgorithm().initialize(sharedData);

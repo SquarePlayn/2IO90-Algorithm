@@ -13,9 +13,13 @@ public class Graph {
     // it should be assigned to the closer one
     private static final boolean HUB_OVERWRITE_RECURSE = true; // If when you find a closer one, you also check its neighbours
 
+    //ArrayList of all vertices that are a K-center
+    private ArrayList<Vertex> kCenters;
+
     Graph() {
         this.vertices = new ArrayList<>();
         this.hubs = new ArrayList<>();
+        this.kCenters = new ArrayList<>();
     }
 
     /**
@@ -192,5 +196,51 @@ public class Graph {
             }
         }
 
+    }
+
+    /**
+     * Find centers for the K-center problem
+     */
+    public void findKCenters() {
+        if(kCenters.size() > 0) {
+            Main.debug("Requested to find K-centers while already found");
+            return;
+        }
+
+        Vertex firstKCenter = getVertex(0);
+        firstKCenter.setKCenter(true);
+        kCenters.add(firstKCenter);
+
+        //TODO: I am making the assumption here that there are at least 2 vertices in the graph
+        Vertex candidateCenter = getVertex(1);
+        Vertex checkVertex;
+        int distToNewKCenter;
+
+        for(int i=0; i<Preamble.amountOfTaxis-1; i++) {
+            for(int j=0; j<getSize(); j++) {
+                checkVertex = getVertex(j);
+                if(checkVertex.getDistToKCenter() != 0) {
+                    //Find the distance from this vertex to the closest K-center
+                    //TODO: can definitely be optimized
+                    distToNewKCenter = checkVertex.getDistanceTo(kCenters.get(kCenters.size()-1));
+                    if(checkVertex.getDistToKCenter() > distToNewKCenter  ||  checkVertex.getDistToKCenter() == -1) {
+                        checkVertex.setDistToKCenter(distToNewKCenter);
+                    }
+
+                    //Update what is the furthest vertex from any K-center up until now
+                    if (checkVertex.getDistToKCenter() > candidateCenter.getDistToKCenter()) {
+                        candidateCenter = checkVertex;
+                    }
+                }
+            }
+
+            //Add the newly found K-center
+            candidateCenter.setKCenter(true);
+            kCenters.add(candidateCenter);
+        }
+    }
+
+    public ArrayList<Vertex> getkCenters() {
+        return kCenters;
     }
 }
