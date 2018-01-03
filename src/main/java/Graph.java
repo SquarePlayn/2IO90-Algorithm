@@ -14,6 +14,7 @@ public class Graph {
     private static final boolean HUB_OVERWRITE_RECURSE = true; // If when you find a closer one, you also check its neighbours
 
     //ArrayList of all vertices that are a K-center
+    private ArrayList<Vertex> tempKCenters = new ArrayList<>();
     private ArrayList<Vertex> kCenters;
 
     Graph() {
@@ -209,26 +210,29 @@ public class Graph {
 
         Vertex firstKCenter = getVertex(0);
         firstKCenter.setKCenter(true);
-        kCenters.add(firstKCenter);
+        tempKCenters.add(firstKCenter);
 
         //TODO: I am making the assumption here that there are at least 2 vertices in the graph
         Vertex candidateCenter = getVertex(1);
         Vertex checkVertex;
-        int distToNewKCenter;
+        int distToNewestCenter;
 
-        for(int i=0; i<Preamble.amountOfTaxis-1; i++) {
+        //Determine the order in which the approximation finds vertices as K-centers
+        for(int i=0; i<Math.min(getSize(), Math.max(
+                Math.floor(getSize()/10+Preamble.amountOfTaxis/2), Preamble.amountOfTaxis)
+        ); i++) {
             for(int j=0; j<getSize(); j++) {
                 checkVertex = getVertex(j);
-                if(checkVertex.getDistToKCenter() != 0) {
-                    //Find the distance from this vertex to the closest K-center
-                    //TODO: can definitely be optimized
-                    distToNewKCenter = checkVertex.getDistanceTo(kCenters.get(kCenters.size()-1));
-                    if(checkVertex.getDistToKCenter() > distToNewKCenter  ||  checkVertex.getDistToKCenter() == -1) {
-                        checkVertex.setDistToKCenter(distToNewKCenter);
+                if(checkVertex.getDistToTempKCenter() != 0) {
+                    //Find the distance from this vertex to the closest temporary K-center
+                    distToNewestCenter = checkVertex.getDistanceTo(tempKCenters.get(tempKCenters.size()-1));
+                    if(checkVertex.getDistToTempKCenter() > distToNewestCenter
+                            ||  checkVertex.getDistToTempKCenter() == -1) {
+                        checkVertex.setDistToTempKCenter(distToNewestCenter);
                     }
 
-                    //Update what is the furthest vertex from any K-center up until now
-                    if (checkVertex.getDistToKCenter() > candidateCenter.getDistToKCenter()) {
+                    //Update what is the furthest vertex from any of the temporary K-center up until now
+                    if (checkVertex.getDistToTempKCenter() > candidateCenter.getDistToTempKCenter()) {
                         candidateCenter = checkVertex;
                     }
                 }
@@ -236,11 +240,17 @@ public class Graph {
 
             //Add the newly found K-center
             candidateCenter.setKCenter(true);
-            kCenters.add(candidateCenter);
+            tempKCenters.add(candidateCenter);
         }
+
+        //Use the last found vertices as actual K-centers
+        for(int i=1; i<Preamble.amountOfTaxis+1; i++) {
+            kCenters.add(tempKCenters.get( tempKCenters.size()-i ));
+        }
+
     }
 
-    public ArrayList<Vertex> getkCenters() {
+    public ArrayList<Vertex> getKCenters() {
         return kCenters;
     }
 }

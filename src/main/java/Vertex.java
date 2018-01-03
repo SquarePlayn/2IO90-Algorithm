@@ -28,8 +28,9 @@ public class Vertex {
     private HashMap<Integer, ArrayList<Vertex>> pathToHubCenter;
 
     //K-Center variables
+    private boolean isTempKCenter;
+    private int distToTempKCenter;
     private boolean isKCenter;
-    private int distToKCenter;
 
     //BFS Improvements
     boolean bfsStarted = false;
@@ -53,8 +54,9 @@ public class Vertex {
         vertexTowardsCenter = null;
         hub = null;
 
+        isTempKCenter = false;
+        distToTempKCenter = -1;
         isKCenter = false;
-        distToKCenter = -1;
     }
 
     public void initializeHub(int hubID) {
@@ -272,12 +274,23 @@ public class Vertex {
         this.hub = hub;
     }
 
-    public int getDistToKCenter() {
-        return distToKCenter;
+    public int getDistToTempKCenter() {
+        return distToTempKCenter;
     }
 
-    public void setDistToKCenter(int distToKCenter) {
-        this.distToKCenter = distToKCenter;
+    public void setDistToTempKCenter(int distToTempKCenter) {
+        this.distToTempKCenter = distToTempKCenter;
+    }
+
+    public boolean isTempKCenter() {
+        return isTempKCenter;
+    }
+
+    public void setTempKCenter(boolean tempKCenter) {
+        isTempKCenter = tempKCenter;
+        if(tempKCenter) {
+            setDistToTempKCenter(0);
+        }
     }
 
     public boolean isKCenter() {
@@ -285,9 +298,6 @@ public class Vertex {
     }
 
     public void setKCenter(boolean kCenter) {
-        isHubCenter = kCenter;
-        if(kCenter) {
-            setDistToKCenter(0);
-        }
+        isKCenter = kCenter;
     }
 }
