@@ -79,6 +79,7 @@ public class Scheduler {
     private void reschedule() {
         //TODO Add something better
 
+/*
         if(sharedData.getGraph().getSize() > SHEDULE_CUTOFF) {
             activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
         } else {
@@ -88,6 +89,10 @@ public class Scheduler {
                 activeAlgorithm = AlgorithmType.LSD;
             }
         }
+*/
+
+        //TODO Remove, since For testing
+        activeAlgorithm = AlgorithmType.HUBS;
 
         if(!activeAlgorithm.getAlgorithm().isInitialized()){
             activeAlgorithm.getAlgorithm().initialize(sharedData);

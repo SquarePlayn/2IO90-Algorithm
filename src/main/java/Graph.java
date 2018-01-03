@@ -8,10 +8,15 @@ public class Graph {
 
     //Needed for the organizing of hubs code
     private ArrayList<Vertex> hubs;
-    private int HUB_RADIUS = 4;
+    private int HUB_RADIUS = 7;
     private static final boolean HUB_OVERWRITE_SET = true; // If, when finding a vertex is closer to another hub,
     // it should be assigned to the closer one
     private static final boolean HUB_OVERWRITE_RECURSE = true; // If when you find a closer one, you also check its neighbours
+    private static final boolean HUB_BUILD_INTERHUBINFO = true; //If you want to also build the info like paths between hubs
+    private static final boolean HUB_BUILD_HUBTOVERTEX_NEXTTOWARDS = true; //If you want to store the next-up vertices towards each vertex in the circle
+    private static final boolean HUB_BUILD_INTERHUB_FULLPATHS = false; //If you want to store in the hub info the full path arrays to neighbouring vertices
+    private static final boolean HUB_BUILD_INTERHUB_NEXTTOWARDS = true; //If you want to store in the vertices on the path to neighbouring hubs what the next vertex is towards it. Requires hubtovertex
+    private static final boolean HUB_BUILD_NEXTHUBTOWARDSHUB = true; // If you want to build the DB of which hub is the next hub to go to to get to any hub
 
     Graph() {
         this.vertices = new ArrayList<>();
@@ -135,6 +140,14 @@ public class Graph {
             return;
         }
 
+        //Bigger hub range for bigger graphs to save time
+        //TODO Make more intuitive function here
+        if(getSize() > 15000) {
+            HUB_RADIUS = 7;
+        } else {
+            HUB_RADIUS = 4;
+        }
+
         //First make an array that will have the vertice IDs in random order
         ArrayList<Integer> randomOrder = new ArrayList<>(getSize());
         for(int i=0; i<getSize(); i++) {
@@ -142,7 +155,7 @@ public class Graph {
         }
         Collections.shuffle(randomOrder, random);
 
-        //Go over each vertice in a random-like order
+        //Go over each vertice in a random-like order to make them all into hubs
         for(int i=0; i<getSize(); i++) {
             Vertex checkVertice = getVertex(randomOrder.get(i));
 
@@ -182,8 +195,19 @@ public class Graph {
                                 newHub.addHubVertice(neighbour); //Add to the new hubs list
                                 neighbour.setHub(newHub); //Set vertice-hubvalue to the new hub
                                 neighbour.setHubID(newHub.getHubID()); // and its ID
+                                neighbour.setVertexTowardsCenter(v); // and the vertex back
                                 neighbour.setDistToHubCenter(v.getDistToHubCenter() + 1);
-                                neighbour.setVertexTowardsCenter(v);
+
+                                if(HUB_BUILD_HUBTOVERTEX_NEXTTOWARDS) {
+                                    //Set the path on how to get to neighbour from the hub
+                                    Vertex vPrev = neighbour;
+                                    Vertex vNow = v;
+                                    while (!vPrev.equals(v.getHub())) {
+                                        vNow.setNextTowards(neighbour, vPrev);
+                                        vPrev = vNow;
+                                        vNow = vNow.getVertexTowardsCenter();
+                                    }
+                                }
 
                                 //Check if we should recurse
                                 if (neighbour.getDistToHubCenter() <= HUB_RADIUS &&
@@ -194,57 +218,119 @@ public class Graph {
                             } else {
                                 // Not expanding onto this neighbour
 
+
+
                                 if(neighbour.getHubID() >= 0) {
                                     //This node was assigned to some hub
 
-                                    //AdjacentHubs
-                                    v.getHub().addAdjacentHub(neighbour.getHub());
-                                    neighbour.getHub().addAdjacentHub(v.getHub());
+                                    if(HUB_BUILD_INTERHUBINFO) {
+                                        //We want to update/enter interhub info
 
-                                    int newDist = v.getDistToHubCenter() + neighbour.getDistToHubCenter() + 1;
 
-                                    if(newDist < v.getHub().getDistanceTo(neighbour.getHub())) {
-                                        //New distance is smaller than the old one, update
-                                        v.getHub().setDistanceToHubCenter(neighbour.getHub(), newDist);
-                                        neighbour.getHub().setDistanceToHubCenter(v.getHub(), newDist);
+                                        //AdjacentHubs
+                                        v.getHub().addAdjacentHub(neighbour.getHub());
+                                        neighbour.getHub().addAdjacentHub(v.getHub());
 
-                                        //also update pathToHubCenter
-                                        ArrayList<Vertex> path = new ArrayList<>();
+                                        int newDist = v.getDistToHubCenter() + neighbour.getDistToHubCenter() + 1;
 
-                                        //Make path v -> vHub
-                                        Vertex pathVert = v;
-                                        while(!pathVert.equals(v.getHub())) {
-                                            path.add(pathVert);
-                                            pathVert = pathVert.getVertexTowardsCenter();
+                                        if (newDist < v.getHub().getDistanceTo(neighbour.getHub())) {
+                                            //New distance is smaller than the old one, update the distances
+                                            v.getHub().setDistanceToHubCenter(neighbour.getHub(), newDist);
+                                            neighbour.getHub().setDistanceToHubCenter(v.getHub(), newDist);
+
+                                            if(HUB_BUILD_INTERHUB_FULLPATHS) {
+                                                //also update pathToHubCenter
+                                                ArrayList<Vertex> path = new ArrayList<>();
+
+                                                //Make path v -> vHub
+                                                Vertex pathVert = v;
+                                                while (!pathVert.equals(v.getHub())) {
+                                                    path.add(pathVert);
+                                                    pathVert = pathVert.getVertexTowardsCenter();
+                                                }
+
+                                                Collections.reverse(path); //Turn it around so now it's vHub -> v
+
+                                                //Add neighbour -> neighbourHub to the path
+                                                pathVert = neighbour;
+                                                while (!pathVert.equals(neighbour.getHub())) {
+                                                    path.add(pathVert);
+                                                    pathVert = pathVert.getVertexTowardsCenter();
+                                                }
+
+                                                //Now we have the path excluding the end hubs from vHub -> neighbourHub.
+
+                                                //Make a new one that goes neighbourHub -> vHub.
+                                                ArrayList<Vertex> pathBack = new ArrayList<>(path);
+                                                Collections.reverse(pathBack);
+
+                                                //Add the correct end bits
+                                                path.add(neighbour.getHub());
+                                                pathBack.add(v.getHub());
+
+                                                //Now set the paths in the hubs
+                                                v.getHub().setPathToHubCenter(neighbour.getHub(), path);
+                                                neighbour.getHub().setPathToHubCenter(v.getHub(), pathBack);
+
+                                            }
+
+                                            if(HUB_BUILD_INTERHUB_NEXTTOWARDS) {
+                                                if(!HUB_BUILD_HUBTOVERTEX_NEXTTOWARDS) {
+                                                    Main.debug("[ERROR] Used nexttowards, with hubtovertex off");
+                                                } else {
+                                                    //update how to get between the hubs
+
+                                                    //For all from vHub to v
+                                                    Vertex vIter = v.getVertexTowardsCenter();
+                                                    while(vIter != null) {
+                                                        vIter.setNextTowards(neighbour.getHub(), vIter.getNextTowards(v));
+                                                        vIter = vIter.getVertexTowardsCenter();
+                                                    }
+
+                                                    //For all from neighbourHub to neighbour
+                                                    vIter = neighbour.getVertexTowardsCenter();
+                                                    while(vIter != null) {
+                                                        vIter.setNextTowards(v.getHub(), vIter.getNextTowards(neighbour));
+                                                    }
+
+                                                    //For v to neighbour
+                                                    v.setNextTowards(neighbour.getHub(), neighbour);
+
+                                                    //For neighbour to v
+                                                    neighbour.setNextTowards(v.getHub(), v);
+                                                }
+                                            }
+
                                         }
-
-                                        Collections.reverse(path); //Turn it around so now it's vHub -> v
-
-                                        //Add neighbour -> neighbourHub to the path
-                                        pathVert = neighbour;
-                                        while(!pathVert.equals(neighbour.getHub())) {
-                                            path.add(pathVert);
-                                            pathVert = pathVert.getVertexTowardsCenter();
-                                        }
-
-                                        //Now we have the path excluding the end hubs from vHub -> neighbourHub.
-
-                                        //Make a new one that goes neighbourHub -> vHub.
-                                        ArrayList<Vertex> pathBack = new ArrayList<>(path);
-                                        Collections.reverse(pathBack);
-
-                                        //Add the correct end bits
-                                        path.add(neighbour.getHub());
-                                        pathBack.add(v.getHub());
-
-                                        //Now set the paths in the hubs
-                                        v.getHub().setPathToHubCenter(neighbour.getHub(), path);
-                                        neighbour.getHub().setPathToHubCenter(v.getHub(), pathBack);
-
                                     }
                                 }
                             }
 
+                        }
+                    }
+                }
+            }
+        }
+
+        //If we want to build nexthubtohub info, let's do so in BFS-alike fashion
+        if(HUB_BUILD_NEXTHUBTOWARDSHUB) {
+            for(Vertex hub : hubs) {
+                //Do so for each hub
+                ArrayList<Vertex> hubQueue = new ArrayList<>();
+
+                hub.setNextHubTowardsHub(hub, hub);
+                hubQueue.add(hub);
+
+                while(!hubQueue.isEmpty()) {
+                    Vertex selected = hubQueue.remove(0);
+
+                    for(Vertex neighbour : selected.getAdjacentHubs()) {
+                        //Check each adjacent hub to see if it should be added
+
+                        if(neighbour.getNextHubTowardsHub(hub) == null) {
+                            //Not checked yet
+                            neighbour.setNextHubTowardsHub(hub, selected);
+                            hubQueue.add(neighbour);
                         }
                     }
                 }
