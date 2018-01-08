@@ -16,13 +16,6 @@ public class Scheduler {
 
     private int currentMinute;
 
-    public static long time_total;
-    public static long time_kcenters;
-    public static long time_initialize_taxis;
-    public static long time_build_hubs;
-    public static long time_reschedule;
-    public static long time_do_things;
-
     public Scheduler(TaxiScanner scanner) {
         this.scanner = scanner;
         this.sharedData = new SharedData(Preamble.graph);
@@ -33,40 +26,16 @@ public class Scheduler {
      * Entry point. Runs the whole program over all callList minutes untill all customers delivered
      */
     public void run() {
-        long start5 = System.nanoTime();
         createTaxiList();
         testMinutes();
         realMinutes();
-        time_total += System.nanoTime() - start5;
 
-        /**public static long time_taxi_has_arrived = 0;
-         * public static long time_match_entities = 0;
-         * public static long time_advance_taxis = 0;
-         * public static long time_process_moves = 0;
-         */
-
-        // output
-        double total = (double) (time_total / 1000000000.0);
-        double initialize_taxis = (double) (time_initialize_taxis / 1000000000.0);
-        double build_hubs = (double) (time_build_hubs / 1000000000.0);
-        double kcenters = (double) (time_kcenters / 1000000000.0);
-        double reschedule = (double) (time_reschedule / 1000000000.0);
-        double do_things = (double) (time_do_things / 1000000000.0);
-
-        System.out.println("Total time:" + total + "s");
-        System.out.println("  Initialize taxis:" + initialize_taxis + "s");
-        System.out.println("  Build hubs:      " + build_hubs + "s");
-        System.out.println("  Find K-centers:  " + kcenters + "s");
-        System.out.println("  Reschedule:      " + reschedule + "s");
-        System.out.println("  Do things:       " + do_things + "s");
-
-        ArrayList<Vertex> kCentersVertices = new ArrayList<>();
-        kCentersVertices = sharedData.getGraph().getKCenters();
+        //output the found K-centers (for testing purposes)
         ArrayList<Integer> kCentersIds = new ArrayList<>();
-        for(int i=0; i<kCentersVertices.size(); i++) {
-            kCentersIds.add(kCentersVertices.get(i).getId());
+        for(int i=0; i<sharedData.getGraph().getKCenters().size(); i++) {
+            kCentersIds.add(sharedData.getGraph().getKCenters().get(i).getId());
         }
-        System.out.println(kCentersIds.toString());
+        System.out.println("K-centers: " + kCentersIds.toString());
     }
 
     /**
@@ -89,26 +58,17 @@ public class Scheduler {
      */
     public void realMinutes() {
         //From here on, the Actual calling and being called of taxis starts
-        long start1 = System.nanoTime();
         initializeTaxis();
-        time_initialize_taxis += System.nanoTime() - start1;
 
-        long start2 = System.nanoTime();
         sharedData.getGraph().buildHubs(sharedData.getRandom());
-        time_build_hubs += System.nanoTime() - start2;
 
-        long start = System.nanoTime();
         sharedData.getGraph().findKCenters();
-        time_kcenters += System.nanoTime() - start;
 
         //TODO Make sure to redecide which algorithm to use at certain times
         //TODO Make sure in reschedule that algo initialised and up to date
-        long start3 = System.nanoTime();
         reschedule();
-        time_reschedule += System.nanoTime() - start3;
 
         //While there are lines to read, read them and advance to next minute
-        long start4 = System.nanoTime();
         while (scanner.hasNextLine()) {
             readInput();
             advanceMinute(true);
@@ -122,7 +82,6 @@ public class Scheduler {
             advanceMinute(false);
             outputMinute(currentMinute);
         }
-        time_do_things += System.nanoTime() - start4;
     }
 
     /**

@@ -31,6 +31,7 @@ public class Vertex {
     private boolean isTempKCenter;
     private int distToTempKCenter;
     private boolean isKCenter;
+    private int kCenterVisited;
 
     //BFS Improvements
     boolean bfsStarted = false;
@@ -57,6 +58,7 @@ public class Vertex {
         isTempKCenter = false;
         distToTempKCenter = -1;
         isKCenter = false;
+        kCenterVisited = 0;
     }
 
     public void initializeHub(int hubID) {
@@ -289,7 +291,7 @@ public class Vertex {
     public void setTempKCenter(boolean tempKCenter) {
         isTempKCenter = tempKCenter;
         if(tempKCenter) {
-            setDistToTempKCenter(0);
+            this.kCenterVisited = Integer.MAX_VALUE;
         }
     }
 
@@ -299,5 +301,16 @@ public class Vertex {
 
     public void setKCenter(boolean kCenter) {
         isKCenter = kCenter;
+        if(kCenter) {
+            this.kCenterVisited = Integer.MAX_VALUE;
+        }
+    }
+
+    public void increaseKCenterVisited() {
+        kCenterVisited ++;
+    }
+
+    public int getkCenterVisited() {
+        return kCenterVisited;
     }
 }

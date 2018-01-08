@@ -208,46 +208,50 @@ public class Graph {
             return;
         }
 
-        Vertex firstKCenter = getVertex(0);
-        firstKCenter.setKCenter(true);
-        tempKCenters.add(firstKCenter);
+        //Always make vertex 0 the first center
+        makeTempKCenter(getVertex(0));
 
-        //TODO: I am making the assumption here that there are at least 2 vertices in the graph
-        Vertex candidateCenter = getVertex(1);
-        Vertex checkVertex;
-        int distToNewestCenter;
-
-        //Determine the order in which the approximation finds vertices as K-centers
         for(int i=0; i<Math.min(getSize(), Math.max(
                 Math.floor(getSize()/10+Preamble.amountOfTaxis/2), Preamble.amountOfTaxis)
         ); i++) {
-            for(int j=0; j<getSize(); j++) {
-                checkVertex = getVertex(j);
-                if(checkVertex.getDistToTempKCenter() != 0) {
-                    //Find the distance from this vertex to the closest temporary K-center
-                    distToNewestCenter = checkVertex.getDistanceTo(tempKCenters.get(tempKCenters.size()-1));
-                    if(checkVertex.getDistToTempKCenter() > distToNewestCenter
-                            ||  checkVertex.getDistToTempKCenter() == -1) {
-                        checkVertex.setDistToTempKCenter(distToNewestCenter);
-                    }
+            ArrayList<Vertex> queue = new ArrayList<>();
 
-                    //Update what is the furthest vertex from any of the temporary K-center up until now
-                    if (checkVertex.getDistToTempKCenter() > candidateCenter.getDistToTempKCenter()) {
-                        candidateCenter = checkVertex;
-                    }
-                }
+            //Start the BFS from the already found centers
+            for(Vertex v : tempKCenters) {
+                queue.add(v);
             }
 
-            //Add the newly found K-center
-            candidateCenter.setKCenter(true);
-            tempKCenters.add(candidateCenter);
+            while(!queue.isEmpty()) {
+                //Run a BFS
+                Vertex v = queue.remove(0);
+                for(Vertex neighbor : v.getNeigbours()) {
+                    if(!neighbor.isTempKCenter() && v.getkCenterVisited() > neighbor.getkCenterVisited()) {
+                        queue.add(neighbor);
+                        neighbor.increaseKCenterVisited();
+                    }
+                }
+
+                //If this is the last vertex to be visited, make it a K-center
+                if (queue.isEmpty()) {
+                    makeTempKCenter(v);
+                }
+            }
         }
 
-        //Use the last found vertices as actual K-centers
+        //Choose the most recently found centers as the final ones
         for(int i=1; i<Preamble.amountOfTaxis+1; i++) {
-            kCenters.add(tempKCenters.get( tempKCenters.size()-i ));
+            makeKCenter(tempKCenters.get( tempKCenters.size()-i ));
         }
+    }
 
+    public void makeKCenter(Vertex v) {
+        kCenters.add(v);
+        v.setKCenter(true);
+    }
+
+    public void makeTempKCenter(Vertex v) {
+        tempKCenters.add(v);
+        v.setTempKCenter(true);
     }
 
     public ArrayList<Vertex> getKCenters() {
