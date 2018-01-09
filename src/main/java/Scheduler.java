@@ -25,8 +25,12 @@ public class Scheduler {
      */
     public void run() {
         createTaxiList();
-        testMinutes();
-        realMinutes();
+        if(Preamble.testMinutes > 0) {
+            testMinutes();
+        }
+        if(Preamble.callMinutes - Preamble.testMinutes > 0) {
+            realMinutes();
+        }
     }
 
     /**
