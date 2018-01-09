@@ -3,7 +3,8 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class Scheduler {
-    private static final int SHEDULE_CUTOFF = 1024;
+    private static final int SHEDULE_CUTOFF = 1056;
+    private static final int HUNGARIAN_MINSIZE = 100;
 
     private TaxiScanner scanner;
     private SharedData sharedData;
@@ -25,7 +26,10 @@ public class Scheduler {
      */
     public void run() {
         createTaxiList();
-        testMinutes();
+
+        if (Preamble.testMinutes > 0) {
+            testMinutes();
+        }
         realMinutes();
     }
 
@@ -79,20 +83,20 @@ public class Scheduler {
     private void reschedule() {
         //TODO Add something better
 
-/*
+
         if(sharedData.getGraph().getSize() > SHEDULE_CUTOFF) {
             activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
         } else {
-            if (Taxi.MAX_CAPACITY <= 2) {
+            if (Taxi.MAX_CAPACITY <= 1 && sharedData.getGraph().getSize() > HUNGARIAN_MINSIZE) {
                 activeAlgorithm = AlgorithmType.HUNGARIAN;
             } else {
                 activeAlgorithm = AlgorithmType.LSD;
             }
         }
-*/
+
 
         //TODO Remove, since For testing
-        activeAlgorithm = AlgorithmType.HUBS;
+        //activeAlgorithm = AlgorithmType.HUBS;
 
         if(!activeAlgorithm.getAlgorithm().isInitialized()){
             activeAlgorithm.getAlgorithm().initialize(sharedData);
