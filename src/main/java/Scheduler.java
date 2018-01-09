@@ -3,8 +3,9 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class Scheduler {
-    private static final int SHEDULE_CUTOFF = 1056;
+    private static final int SCHEDULE_CUTOFF = 999;
     private static final int HUNGARIAN_MINSIZE = 100;
+    private static final int HUBS_CUTOFF = 3000;
 
     private TaxiScanner scanner;
     private SharedData sharedData;
@@ -12,6 +13,8 @@ public class Scheduler {
     private HashMap<Algorithm.AlgoVar, Integer> lastUpdatedVariables;// Keeps track of when a variable was last updated.
 
     private AlgorithmType activeAlgorithm;
+
+    private int testCalls = 0;
 
     private int currentMinute;
 
@@ -41,7 +44,9 @@ public class Scheduler {
         initializeTaxis(); //TODO Might consider doing a simpler taxi initializer such as always random at this position
         for (int i = 1; i < Preamble.testMinutes; i++) {
             Main.debug("Starting testMinute "+i);
-            scanner.nextLine();
+            String input = scanner.nextLine();
+            testCalls += Integer.parseInt(input.split(" ")[0]);
+
             scanner.println("c");
         }
         scanner.nextLine();
@@ -84,8 +89,17 @@ public class Scheduler {
         //TODO Add something better
 
 
-        if(sharedData.getGraph().getSize() > SHEDULE_CUTOFF) {
-            activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
+        //if(sharedData.getGraph().getSize() > SCHEDULE_CUTOFF) {
+        int expectedCalls = sharedData.getGraph().getSize(); // If no testminutes, go off of graph size
+        if(Preamble.testMinutes > 1) {
+            expectedCalls = testCalls * (Preamble.callMinutes - Preamble.testMinutes) / Preamble.testMinutes;
+        }
+        if(expectedCalls > SCHEDULE_CUTOFF) {
+            if(sharedData.getGraph().getSize() > HUBS_CUTOFF) {
+                activeAlgorithm = AlgorithmType.HUBS;
+            } else {
+                activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
+            }
         } else {
             if (Taxi.MAX_CAPACITY <= 1 && sharedData.getGraph().getSize() > HUNGARIAN_MINSIZE) {
                 activeAlgorithm = AlgorithmType.HUNGARIAN;
