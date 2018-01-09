@@ -29,9 +29,11 @@ public class Vertex {
 
     //K-Center variables
     private boolean isTempKCenter;
-    private int distToTempKCenter;
     private boolean isKCenter;
     private int kCenterVisited;
+    private int kClusterID;
+    private boolean isKClusterCenter;
+    private Vertex nextVertexInLongestPath;
 
     //BFS Improvements
     boolean bfsStarted = false;
@@ -56,9 +58,11 @@ public class Vertex {
         hub = null;
 
         isTempKCenter = false;
-        distToTempKCenter = -1;
         isKCenter = false;
         kCenterVisited = 0;
+        kClusterID = -1;
+        isKClusterCenter = false;
+        nextVertexInLongestPath = null;
     }
 
     public void initializeHub(int hubID) {
@@ -276,14 +280,6 @@ public class Vertex {
         this.hub = hub;
     }
 
-    public int getDistToTempKCenter() {
-        return distToTempKCenter;
-    }
-
-    public void setDistToTempKCenter(int distToTempKCenter) {
-        this.distToTempKCenter = distToTempKCenter;
-    }
-
     public boolean isTempKCenter() {
         return isTempKCenter;
     }
@@ -310,7 +306,35 @@ public class Vertex {
         kCenterVisited ++;
     }
 
+    public void setKCenterVisited(int visited) {
+        kCenterVisited = visited;
+    }
+
     public int getkCenterVisited() {
         return kCenterVisited;
+    }
+
+    public int getKClusterID() {
+        return kClusterID;
+    }
+
+    public void setKClusterID(int id) {
+        kClusterID = id;
+    }
+
+    public boolean isKClusterCenter() {
+        return  isKClusterCenter;
+    }
+
+    public void setKClusterCenter(boolean kClusterCenter) {
+        isKClusterCenter = kClusterCenter;
+    }
+
+    public Vertex getNextVertexInLongestPath() {
+        return nextVertexInLongestPath;
+    }
+
+    public void setNextVertexInLongestPath(Vertex v) {
+        nextVertexInLongestPath = v;
     }
 }

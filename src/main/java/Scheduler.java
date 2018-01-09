@@ -1,5 +1,6 @@
 import com.sun.org.apache.xpath.internal.SourceTree;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -36,6 +37,13 @@ public class Scheduler {
             kCentersIds.add(sharedData.getGraph().getKCenters().get(i).getId());
         }
         System.out.println("K-centers: " + kCentersIds.toString());
+
+        //output the found cluster centers (for testing purposes)
+        ArrayList<Integer> clusterCenterIds = new ArrayList<>();
+        for(int i=0; i<sharedData.getGraph().getkClusterCenters().size(); i++) {
+            clusterCenterIds.add(sharedData.getGraph().getkClusterCenters().get(i).getId());
+        }
+        System.out.println("Cluster centers: " + clusterCenterIds.toString());
     }
 
     /**
