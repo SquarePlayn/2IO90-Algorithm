@@ -7,10 +7,10 @@ public class Customer {
     private Vertex position; //Position of the customer. Null if in taxi
     private Taxi taxi; //The taxi the customer is in. Null if not in any taxi.
 
-    //Needed by LSD. Keeps track of if another taxi already handles this customer. Does not need updating between minutes
+    //Keeps track of if another taxi already handles this customer. Does not need updating between minutes
     private boolean hasBeenPickedUp;
     private boolean hasBeenChecked;
-    private boolean isBeingHandled;
+    private boolean isBeingHandled; //NB Hubs requires this to be up to date
 
     public Customer(Vertex initialPosition, Vertex destination, int creationMinute) {
         this.initialPosition = initialPosition;

@@ -8,12 +8,16 @@ public class Taxi {
     private Vertex position;
     private ArrayList<Customer> passengers;
 
-    // Needed for ALGO SimpleQueue
+    // Needed for ALGO SimpleQueue and hubs
     private Customer customer; // Which customer we're on our way to pick up.
     private boolean inOperation; // Is doing something
 
-    //Used by both LSD and SimpleQueue
+    //Used by LSD, SimpleQueue and hubs
     private ArrayList<Vertex> path; // Either the path towards the customer or the goal, depending on current state.
+
+    //Used by hubs
+    private Vertex movingToHub;
+    private boolean goingToCenter;
 
     // Needed for LSD.
     private int turnsLeft = -1;
@@ -114,5 +118,21 @@ public class Taxi {
 
     public void setTurnsLeft(int turnsLeft) {
         this.turnsLeft = turnsLeft;
+    }
+
+    public Vertex getMovingToHub() {
+        return movingToHub;
+    }
+
+    public void setMovingToHub(Vertex movingToHub) {
+        this.movingToHub = movingToHub;
+    }
+
+    public boolean isGoingToCenter() {
+        return goingToCenter;
+    }
+
+    public void setGoingToCenter(boolean goingToCenter) {
+        this.goingToCenter = goingToCenter;
     }
 }

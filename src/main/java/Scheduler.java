@@ -3,7 +3,9 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class Scheduler {
-    private static final int SHEDULE_CUTOFF = 1024;
+    private static final int SCHEDULE_CUTOFF = 999;
+    private static final int HUNGARIAN_MINSIZE = 100;
+    private static final int HUBS_CUTOFF = 3000;
 
     private TaxiScanner scanner;
     private SharedData sharedData;
@@ -11,6 +13,8 @@ public class Scheduler {
     private HashMap<Algorithm.AlgoVar, Integer> lastUpdatedVariables;// Keeps track of when a variable was last updated.
 
     private AlgorithmType activeAlgorithm;
+
+    private int testCalls = 0;
 
     private int currentMinute;
 
@@ -25,12 +29,15 @@ public class Scheduler {
      */
     public void run() {
         createTaxiList();
-        if(Preamble.testMinutes > 0) {
+      
+        if (Preamble.testMinutes > 0) {
             testMinutes();
         }
-        if(Preamble.callMinutes - Preamble.testMinutes > 0) {
+      
+        if (Preamble.callMinutes - Preamble.testMinutes > 0) {
             realMinutes();
         }
+
     }
 
     /**
@@ -41,7 +48,9 @@ public class Scheduler {
         initializeTaxis(); //TODO Might consider doing a simpler taxi initializer such as always random at this position
         for (int i = 1; i < Preamble.testMinutes; i++) {
             Main.debug("Starting testMinute "+i);
-            scanner.nextLine();
+            String input = scanner.nextLine();
+            testCalls += Integer.parseInt(input.split(" ")[0]);
+
             scanner.println("c");
         }
         scanner.nextLine();
@@ -54,6 +63,8 @@ public class Scheduler {
     public void realMinutes() {
         //From here on, the Actual calling and being called of taxis starts
         initializeTaxis();
+
+        sharedData.getGraph().buildHubs(sharedData.getRandom());
 
         //TODO Make sure to redecide which algorithm to use at certain times
         //TODO Make sure in reschedule that algo initialised and up to date
@@ -81,15 +92,29 @@ public class Scheduler {
     private void reschedule() {
         //TODO Add something better
 
-        if(sharedData.getGraph().getSize() > SHEDULE_CUTOFF) {
-            activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
+
+        //if(sharedData.getGraph().getSize() > SCHEDULE_CUTOFF) {
+        int expectedCalls = sharedData.getGraph().getSize(); // If no testminutes, go off of graph size
+        if(Preamble.testMinutes > 1) {
+            expectedCalls = testCalls * (Preamble.callMinutes - Preamble.testMinutes) / Preamble.testMinutes;
+        }
+        if(expectedCalls > SCHEDULE_CUTOFF) {
+            if(sharedData.getGraph().getSize() > HUBS_CUTOFF) {
+                activeAlgorithm = AlgorithmType.HUBS;
+            } else {
+                activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
+            }
         } else {
-            if (Taxi.MAX_CAPACITY <= 2) {
+            if (Taxi.MAX_CAPACITY <= 1 && sharedData.getGraph().getSize() > HUNGARIAN_MINSIZE) {
                 activeAlgorithm = AlgorithmType.HUNGARIAN;
             } else {
                 activeAlgorithm = AlgorithmType.LSD;
             }
         }
+
+
+        //TODO Remove, since For testing
+        //activeAlgorithm = AlgorithmType.HUBS;
 
         if(!activeAlgorithm.getAlgorithm().isInitialized()){
             activeAlgorithm.getAlgorithm().initialize(sharedData);
@@ -121,7 +146,14 @@ public class Scheduler {
         //TODO Set to use IOHistory
         Main.debug("Starting initialize taxis");
 
-        String output = initializeTaxis_random();
+        String output;
+
+        if(Preamble.amountOfTaxis > sharedData.getGraph().getSize()/2) {
+            output = initializeTaxis_random();
+        } else {
+            output = initializeTaxis_hubs();
+        }
+
         output += "c";
 
         Main.debug("InitialiseTaxis() is now outputting "+output);
@@ -147,6 +179,25 @@ public class Scheduler {
         }
 
         return output.toString();
+    }
+
+    private String initializeTaxis_hubs() {
+        Main.debug("Using the hubs() type of taxi distribution");
+        sharedData.getGraph().buildHubs(sharedData.getRandom());
+
+        StringBuilder output = new StringBuilder();
+        for(Taxi taxi : sharedData.getTaxiList()) {
+            taxi.setPosition(sharedData.getGraph().getHub(
+                    taxi.getId() % sharedData.getGraph().getHubs().size()));
+            output.append("m ")
+                    .append(taxi.getOutputId())
+                    .append(" ")
+                    .append(taxi.getPosition().getId())
+                    .append(" ");
+        }
+
+        return output.toString();
+
     }
 
     /**
