@@ -14,7 +14,6 @@ public class Graph {
     private static final boolean HUB_OVERWRITE_RECURSE = true; // If when you find a closer one, you also check its neighbours
 
     //ArrayList of all vertices that are a K-center
-    private ArrayList<Vertex> tempKCenters = new ArrayList<>();
     private ArrayList<Vertex> kCenters;
     private ArrayList<Vertex> kClusterCenters;
 
@@ -216,7 +215,7 @@ public class Graph {
             return;
         }
 
-        //Pick the vertex with the most neighbors as the first center
+        /*Pick the vertex with the most neighbors as the first center
         int candidateNeighborCount = 0;
         Vertex candidate = getVertex(0);
         for (Vertex v : vertices) {
@@ -225,25 +224,25 @@ public class Graph {
                 candidateNeighborCount = v.getNeigbours().size();
             }
         }
+        */
+
+        Vertex candidate = getVertex(0);
 
 
-        //Vertex candidate = getVertex(0);
-
-
-        makeTempKCenter(candidate);
+        makeKCenter(candidate);
         System.out.println("First center: " + candidate.getId());
 
         //Find the other centers by consecutively finding which vertex is furthest away from the already chosen centers
         ArrayList<Vertex> queue = new ArrayList<>();
         for(int i=0; i<Preamble.amountOfTaxis; i++) {
             //Start the BFS from the already found centers
-            queue.addAll(tempKCenters);
+            queue.addAll(kCenters);
 
             while(!queue.isEmpty()) {
                 //Run a BFS
                 Vertex v = queue.remove(0);
                 for(Vertex neighbor : v.getNeigbours()) {
-                    if(!neighbor.isTempKCenter() && v.getkCenterVisited() > neighbor.getkCenterVisited()) {
+                    if(!neighbor.isKCenter() && v.getkCenterVisited() > neighbor.getkCenterVisited()) {
                         queue.add(neighbor);
                         neighbor.increaseKCenterVisited();
                     }
@@ -251,14 +250,9 @@ public class Graph {
 
                 //If this is the last vertex to be visited, make it a K-center
                 if (queue.isEmpty()) {
-                    makeTempKCenter(v);
+                    makeKCenter(v);
                 }
             }
-        }
-
-        //Choose the most recently found centers as the final ones
-        for(int i=1; i<Preamble.amountOfTaxis+1; i++) {
-            makeKCenter(tempKCenters.get( tempKCenters.size()-i ));
         }
 
         findCenters += System.nanoTime() - start1;
@@ -398,11 +392,6 @@ public class Graph {
     public void makeKCenter(Vertex v) {
         kCenters.add(v);
         v.setKCenter(true);
-    }
-
-    public void makeTempKCenter(Vertex v) {
-        tempKCenters.add(v);
-        v.setTempKCenter(true);
     }
 
     public void makeKClusterCenter(Vertex v) {

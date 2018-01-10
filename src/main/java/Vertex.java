@@ -28,7 +28,6 @@ public class Vertex {
     private HashMap<Integer, ArrayList<Vertex>> pathToHubCenter;
 
     //K-Center variables
-    private boolean isTempKCenter;
     private boolean isKCenter;
     private int kCenterVisited;
     private int kClusterID;
@@ -57,7 +56,6 @@ public class Vertex {
         vertexTowardsCenter = null;
         hub = null;
 
-        isTempKCenter = false;
         isKCenter = false;
         kCenterVisited = 0;
         kClusterID = -1;
@@ -278,17 +276,6 @@ public class Vertex {
 
     public void setHub(Vertex hub) {
         this.hub = hub;
-    }
-
-    public boolean isTempKCenter() {
-        return isTempKCenter;
-    }
-
-    public void setTempKCenter(boolean tempKCenter) {
-        isTempKCenter = tempKCenter;
-        if(tempKCenter) {
-            this.kCenterVisited = Integer.MAX_VALUE;
-        }
     }
 
     public boolean isKCenter() {
