@@ -23,6 +23,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
         taxiReadyQueue = new ArrayList<>();
         taxiInOperationList = new ArrayList<>();
 
+        taxiReadyQueue.addAll(sharedData.getTaxiList());
     }
 
     @Override
