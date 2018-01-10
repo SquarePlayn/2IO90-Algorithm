@@ -31,8 +31,12 @@ public class Scheduler {
      */
     public void run() {
         createTaxiList();
-        testMinutes();
-        realMinutes();
+        if(Preamble.testMinutes > 0) {
+            testMinutes();
+        }
+        if(Preamble.callMinutes - Preamble.testMinutes > 0) {
+            realMinutes();
+        }
     }
 
     /**
@@ -92,7 +96,7 @@ public class Scheduler {
 
         if (difTime > 15000000000L) {
 
-            reschedule(RescheduleType.HALF_TIME);
+            //reschedule(RescheduleType.HALF_TIME);
             halfTimeReschedule = true;
 
         }
@@ -107,7 +111,7 @@ public class Scheduler {
         if(sharedData.getGraph().getSize() > SHEDULE_CUTOFF) {
             activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
         } else {
-            if (Taxi.MAX_CAPACITY <= 5) {
+            if (Taxi.MAX_CAPACITY <= 2) {
                 activeAlgorithm = AlgorithmType.HUNGARIAN;
             } else {
                 activeAlgorithm = AlgorithmType.LSD;
@@ -133,24 +137,34 @@ public class Scheduler {
 
             case HALF_TIME:
 
-                if (rescheduleType.equals(RescheduleType.END_OF_CALL_LIST))
-                    return;
-
+                // Calculate time difference since start
                 long difTime = System.nanoTime() - startTime;
 
+                // Calculate amount of customers already delivered
                 float customersDelivered = sharedData.getCustomerCallAmount() - sharedData.getCustomerList().size();
 
+                // Calculate amount of time it took to deliver those
                 float timeToDeliver = difTime / customersDelivered;
 
+                // Calculate time needed to finish running with current pace
                 float timeNeededToFinish = timeToDeliver * sharedData.getCustomerList().size();
 
                 System.out.println("DifTime: " + difTime + ", sharedDataCustomerAmount: " + sharedData.getCustomerCallAmount() + ", sharedDataCustomerList: " + sharedData.getCustomerList().size() + ", customersDelivered: " + customersDelivered + ", timeToDeliver: " + timeToDeliver + ", timeNeededToFinished: " + timeNeededToFinish + ", timeLeft: " + (30000000000L - difTime));
 
+                // 30s - difTime < timeNeededToFinish
                 if (30000000000L - difTime < timeNeededToFinish) {
 
-                    activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
+                    if (activeAlgorithm == AlgorithmType.SIMPLEQUEUE) {
 
-                    System.out.println("Switched to SimpleQueue due to time issues");
+                        System.out.println("Switch to SimpleQueue not made, already running SimpleQueue");
+
+                    } else {
+
+                        activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
+
+                        System.out.println("Switched to SimpleQueue due to time issues");
+
+                    }
 
                 }
 
