@@ -30,8 +30,8 @@ public class Vertex {
     //K-Center variables
     private boolean isKCenter;
     private int kCenterVisited;
-    private int kClusterID;
-    private boolean isKClusterCenter;
+    private int clusterID;
+    private boolean isClusterOrigin;
     private Vertex nextVertexInLongestPath;
 
     //BFS Improvements
@@ -58,8 +58,8 @@ public class Vertex {
 
         isKCenter = false;
         kCenterVisited = 0;
-        kClusterID = -1;
-        isKClusterCenter = false;
+        clusterID = -1;
+        isClusterOrigin = false;
         nextVertexInLongestPath = null;
     }
 
@@ -301,20 +301,23 @@ public class Vertex {
         return kCenterVisited;
     }
 
-    public int getKClusterID() {
-        return kClusterID;
+    public int getClusterID() {
+        return clusterID;
     }
 
-    public void setKClusterID(int id) {
-        kClusterID = id;
+    public void setClusterID(int id) {
+        this.clusterID = id;
     }
 
-    public boolean isKClusterCenter() {
-        return  isKClusterCenter;
+    public boolean isClusterOrigin() {
+        return  isClusterOrigin;
     }
 
-    public void setKClusterCenter(boolean kClusterCenter) {
-        isKClusterCenter = kClusterCenter;
+    public void setClusterOrigin(boolean clusterOrigin) {
+        isClusterOrigin = clusterOrigin;
+        if(clusterOrigin) {
+            this.kCenterVisited = Integer.MAX_VALUE;
+        }
     }
 
     public Vertex getNextVertexInLongestPath() {

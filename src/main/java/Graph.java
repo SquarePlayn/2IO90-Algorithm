@@ -15,7 +15,7 @@ public class Graph {
 
     //ArrayList of all vertices that are a K-center
     private ArrayList<Vertex> kCenters;
-    private ArrayList<Vertex> kClusterCenters;
+    private ArrayList<Vertex> clusterOrigins;
 
 
     public static long findCenters = 0;
@@ -26,7 +26,7 @@ public class Graph {
         this.vertices = new ArrayList<>();
         this.hubs = new ArrayList<>();
         this.kCenters = new ArrayList<>();
-        this.kClusterCenters = new ArrayList<>();
+        this.clusterOrigins = new ArrayList<>();
     }
 
     /**
@@ -206,7 +206,12 @@ public class Graph {
     }
 
     /**
-     * Find centers for the K-center problem
+     * Find centers for the K-center problem:
+     * To do this, we will create several clusters of vertices. (Equally many clusters as taxis (k)).
+     * To nicely spread out these clusters over the graph, we first pick k vertices, that are decently spread out,
+     * to become the origins of these clusters and thus roughly mark the location of the clusters.
+     * Then, we will create the clusters by having each Vertex join the same cluster as the closest cluster origin.
+     * The centers of these clusters will then be chosen as the K-centers.
      */
     public void findKCenters() {
         long start1 = System.nanoTime();
@@ -215,42 +220,28 @@ public class Graph {
             return;
         }
 
-        /*Pick the vertex with the most neighbors as the first center
-        int candidateNeighborCount = 0;
-        Vertex candidate = getVertex(0);
-        for (Vertex v : vertices) {
-            if(v.getNeigbours().size() > candidateNeighborCount) {
-                candidate = v;
-                candidateNeighborCount = v.getNeigbours().size();
-            }
-        }
-        */
+        //Always make vertex 0 the first cluster origin
+        makeClusterOrigin(getVertex(0));
 
-        Vertex candidate = getVertex(0);
-
-
-        makeKCenter(candidate);
-        System.out.println("First center: " + candidate.getId());
-
-        //Find the other centers by consecutively finding which vertex is furthest away from the already chosen centers
+        //Find the other origins by consecutively finding which vertex is furthest away from any already chosen origin
         ArrayList<Vertex> queue = new ArrayList<>();
-        for(int i=0; i<Preamble.amountOfTaxis; i++) {
-            //Start the BFS from the already found centers
-            queue.addAll(kCenters);
+        for(int i=0; i<Preamble.amountOfTaxis-1; i++) {
+            //Start the BFS from the already found origins
+            queue.addAll(clusterOrigins);
 
             while(!queue.isEmpty()) {
                 //Run a BFS
                 Vertex v = queue.remove(0);
                 for(Vertex neighbor : v.getNeigbours()) {
-                    if(!neighbor.isKCenter() && v.getkCenterVisited() > neighbor.getkCenterVisited()) {
+                    if(!neighbor.isClusterOrigin() && v.getkCenterVisited() > neighbor.getkCenterVisited()) {
                         queue.add(neighbor);
                         neighbor.increaseKCenterVisited();
                     }
                 }
 
-                //If this is the last vertex to be visited, make it a K-center
+                //If this is the last vertex to be visited, make it a cluster origin
                 if (queue.isEmpty()) {
-                    makeKCenter(v);
+                    makeClusterOrigin(v);
                 }
             }
         }
@@ -258,12 +249,12 @@ public class Graph {
         findCenters += System.nanoTime() - start1;
 
         //TODO: Delete this in final version
-        //Values that give an indication of how well the centers were chosen
+        //Values that give an indication of how well the origins were chosen
         int maxDist = 0;
         double avgDist = 0;
         for (Vertex v : vertices) {
             int closest = Integer.MAX_VALUE;
-            for (Vertex center : kCenters) {
+            for (Vertex center : clusterOrigins) {
                 if (v.getDistanceTo(center) < closest) {
                     closest = v.getDistanceTo(center);
                 }
@@ -277,45 +268,46 @@ public class Graph {
 
         avgDist /= getSize();
 
-        System.out.println("Max. distance to center: " + maxDist);
-        System.out.println("Avg. distance to center: " + avgDist);
+        System.out.println("Max. distance to origin: " + maxDist);
+        System.out.println("Avg. distance to origin: " + avgDist);
         //end of test stuff
 
         long start2 = System.nanoTime();
 
-        //Give each center a unique kClusterID
-        for (int i=0; i<kCenters.size(); i++) {
-            kCenters.get(i).setKClusterID(i);
+        //Give each origin a unique clusterID
+        for (int i=0; i<clusterOrigins.size(); i++) {
+            clusterOrigins.get(i).setClusterID(i);
         }
 
-        //Form a cluster around each center
+        //Form a cluster around each origin
         queue = new ArrayList<>();
-        queue.addAll(kCenters);
+        queue.addAll(clusterOrigins);
         while(!queue.isEmpty()) {
             Vertex v = queue.remove(0);
             for(Vertex neighbor : v.getNeigbours()) {
-                if(neighbor.getKClusterID() == -1) {
+                //If a neighbor doesn't belong to a cluster yet, add it to the same cluster as the current vertex
+                if(neighbor.getClusterID() == -1) {
                     queue.add(neighbor);
-                    neighbor.setKClusterID(v.getKClusterID());
+                    neighbor.setClusterID(v.getClusterID());
                 }
             }
         }
 
         //Find the center of each cluster
-        for (Vertex center : kCenters) {
-            //Find furthest vertex from the K-center in this cluster
+        for (Vertex origin : clusterOrigins) {
+            //Find furthest vertex from the cluster origin
             Vertex longestPathStart = null;
             Vertex longestPathEnd = null;
 
             queue = new ArrayList<>();
-            queue.add(center);
-            center.setKCenterVisited(0);
+            queue.add(origin);
+            origin.setKCenterVisited(0);
             while(!queue.isEmpty()) {
                 Vertex v = queue.remove(0);
                 for(Vertex neighbor : v.getNeigbours()) {
-                    if(neighbor.getKClusterID() == v.getKClusterID() && neighbor.getkCenterVisited() != 0) {
+                    if(neighbor.getClusterID() == v.getClusterID() && neighbor.getkCenterVisited() != 0) {
                         queue.add(neighbor);
-                        neighbor.setKClusterID(v.getKClusterID());
+                        neighbor.setClusterID(v.getClusterID());
                         neighbor.setKCenterVisited(0);
                     }
                 }
@@ -332,7 +324,7 @@ public class Graph {
             while(!queue.isEmpty()) {
                 Vertex v = queue.remove(0);
                 for(Vertex neighbor : v.getNeigbours()) {
-                    if(neighbor.getKClusterID() == v.getKClusterID() && neighbor.getkCenterVisited() != 1) {
+                    if(neighbor.getClusterID() == v.getClusterID() && neighbor.getkCenterVisited() != 1) {
                         queue.add(neighbor);
                         neighbor.setNextVertexInLongestPath(v);
                         neighbor.setKCenterVisited(1);
@@ -356,20 +348,19 @@ public class Graph {
                     longestPath.add(v.getNextVertexInLongestPath());
                 }
             }
-
             //Set the midway point in this path as the cluster center
-            makeKClusterCenter(longestPath.get(longestPath.size()/2));
+            makeKCenter(longestPath.get(longestPath.size()/2));
         }
 
         findClusters += System.nanoTime() - start2;
 
         //TODO: Delete this in final version
-        //Values that give an indication of how well the centers were chosen
+        //Values that give an indication of how well the K-centers were chosen
         int maxDist2 = 0;
         double avgDist2 = 0;
         for (Vertex v : vertices) {
             int closest = Integer.MAX_VALUE;
-            for (Vertex center2 : kClusterCenters) {
+            for (Vertex center2 : kCenters) {
                 if (v.getDistanceTo(center2) < closest) {
                     closest = v.getDistanceTo(center2);
                 }
@@ -383,8 +374,8 @@ public class Graph {
 
         avgDist2 /= getSize();
 
-        System.out.println("Max. distance to cluster center: " + maxDist2);
-        System.out.println("Avg. distance to cluster center: " + avgDist2);
+        System.out.println("Max. distance to K-center: " + maxDist2);
+        System.out.println("Avg. distance to K-center: " + avgDist2);
         //end of test stuff
 
     }
@@ -394,16 +385,16 @@ public class Graph {
         v.setKCenter(true);
     }
 
-    public void makeKClusterCenter(Vertex v) {
-        kClusterCenters.add(v);
-        v.setKClusterCenter(true);
+    public void makeClusterOrigin(Vertex v) {
+        clusterOrigins.add(v);
+        v.setClusterOrigin(true);
     }
 
     public ArrayList<Vertex> getKCenters() {
         return kCenters;
     }
 
-    public ArrayList<Vertex> getkClusterCenters() {
-        return kClusterCenters;
+    public ArrayList<Vertex> getClusterOrigins() {
+        return clusterOrigins;
     }
 }
