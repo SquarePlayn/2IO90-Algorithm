@@ -71,8 +71,6 @@ public class Scheduler {
         initializeTaxis();
 
         startSchedule();
-      
-        sharedData.getGraph().buildHubs(sharedData.getRandom());
 
         //While there are lines to read, read them and advance to next minute
         while (scanner.hasNextLine()) {
@@ -105,8 +103,10 @@ public class Scheduler {
 
         long difTime = System.nanoTime() - startTime;
 
+        // DiffTIme > 15s
         if (difTime > 15000000000L) {
 
+            // Comment line below out if you want to reschedule at 15s
             //reschedule(RescheduleType.HALF_TIME);
             halfTimeReschedule = true;
 
@@ -170,20 +170,13 @@ public class Scheduler {
                 // Calculate time needed to finish running with current pace
                 float timeNeededToFinish = timeToDeliver * sharedData.getCustomerList().size();
 
-                System.out.println("DifTime: " + difTime + ", sharedDataCustomerAmount: " + sharedData.getCustomerCallAmount() + ", sharedDataCustomerList: " + sharedData.getCustomerList().size() + ", customersDelivered: " + customersDelivered + ", timeToDeliver: " + timeToDeliver + ", timeNeededToFinished: " + timeNeededToFinish + ", timeLeft: " + (30000000000L - difTime));
-
                 // 30s - difTime < timeNeededToFinish
                 if (30000000000L - difTime < timeNeededToFinish) {
 
-                    if (activeAlgorithm == AlgorithmType.SIMPLEQUEUE) {
+                    if (activeAlgorithm != AlgorithmType.SIMPLEQUEUE) {
 
-                        System.out.println("Switch to SimpleQueue not made, already running SimpleQueue");
-
-                    } else {
-
+                        // Switching to SimpleQueue
                         activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
-
-                        System.out.println("Switched to SimpleQueue due to time issues");
 
                     }
 
