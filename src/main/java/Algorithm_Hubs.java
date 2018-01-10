@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 
 public class Algorithm_Hubs extends Algorithm {
 
@@ -10,7 +11,7 @@ public class Algorithm_Hubs extends Algorithm {
 
     @Override
     public void readMinute(ArrayList<Call> calls) {
-        for(Call call : calls) {
+        for (Call call : calls) {
             Customer customer = call.getCustomer();
 
             //Add the customer to the queue
@@ -20,7 +21,7 @@ public class Algorithm_Hubs extends Algorithm {
             customer.setHasBeenPickedUp(false);
             customer.setBeingHandled(false);
 
-            if(!customer.getPosition().isHubCenter()) {
+            if (!customer.getPosition().isHubCenter()) {
                 //If it's not on a hub center already, add it to the hub's list
                 customer.getPosition().getHub().addCustomer(customer);
             }
@@ -45,7 +46,7 @@ public class Algorithm_Hubs extends Algorithm {
         ArrayList<Move> moves = new ArrayList<>();
 
         //Assign waiting ready taxis to a customer
-        while(!customerQueue.isEmpty() && !taxiReadyQueue.isEmpty()) {
+        while (!customerQueue.isEmpty() && !taxiReadyQueue.isEmpty()) {
             Taxi taxi = taxiReadyQueue.iterator().next(); //Getting some/*any* taxi that is ready
             Customer customer = customerQueue.iterator().next(); //Get some/*any* customer that is waiting
 
@@ -57,14 +58,48 @@ public class Algorithm_Hubs extends Algorithm {
         }
 
         ArrayList<Taxi> taxisToBeRemoved = new ArrayList<>(); //ArrayList to catch the to-be-readyupped taxis
-        for(Taxi taxi : taxiInOperationList) {
-            if(taxi.isGoingToCenter()) {
-                if(!taxi.getPosition().isHubCenter()) {
-                    //Just making sure we aren't already on the center
-                    moves.add(taxiMoveCenter(taxi, taxisToBeRemoved));
+        for (Taxi taxi : taxiInOperationList) {
+
+            if (taxi.isGoingToCenter()) {
+                if (!taxi.getPosition().isHubCenter()) {
+
+                    // Check whether we can drive, or we have to pick up some customers
+                    if (taxi.getPosition().getCustomers().isEmpty() || taxi.isFull()) {
+                        moves.add(taxiMoveCenter(taxi, taxisToBeRemoved));
+                    } else {
+                        // There are customers waiting
+                        Iterator<Customer> iterator = taxi.getPosition().getCustomers().iterator();
+
+                        while (iterator.hasNext() && !taxi.isFull()) {
+
+                            Customer customer = iterator.next();
+                            iterator.remove();
+                            moves.add(taxiPickup(taxi, customer));
+
+                        }
+
+                    }
+
                 } else {
+
+                    // Drop of all additional customers
+                    for (int i = 0; i < taxi.getPassengers().size(); i++) {
+
+                        Customer customer = taxi.getPassengers().get(i);
+
+                        if (customer == taxi.getCustomer()) {
+                            continue;
+                        }
+
+                        moves.add(taxiDropPassenger(taxi, customer));
+                        i--;
+
+                    }
+
+                    System.out.println(taxi.getPassengers().size());
+
                     //The case when dropping someone off or picking up on a centerpiece
-                    if(taxi.getCustomer() == null) {
+                    if (taxi.getCustomer() == null) {
                         //If it is not carrying a customer or going to one, it's ready again
                         taxisToBeRemoved.add(taxi);
                         taxiReadyQueue.add(taxi);
@@ -73,7 +108,7 @@ public class Algorithm_Hubs extends Algorithm {
                 }
             } else {
                 // This taxi is going places other than hub center
-                if(taxi.getMovingToHub() != null) {
+                if (taxi.getMovingToHub() != null) {
                     //Curerntly moving towards another hub
                     moves.add(taxiMoveHub(taxi));
                 } else {
@@ -85,7 +120,7 @@ public class Algorithm_Hubs extends Algorithm {
                             moves.add(taxiPickup(taxi, taxi.getCustomer()));
                         } else {
                             //Not yet at customer
-                            if(taxi.getPosition().getHub().equals(taxi.getCustomer().getPosition().getHub())) {
+                            if (taxi.getPosition().getHub().equals(taxi.getCustomer().getPosition().getHub())) {
                                 //On the right hub
                                 moves.add(taxiMove(taxi, taxi.getPosition().getNextTowards(taxi.getCustomer().getPosition())));
                             } else {
@@ -116,7 +151,7 @@ public class Algorithm_Hubs extends Algorithm {
         }
 
         //since we cannot remove from a list we are iterating over, remove the taxis form the inoperationlist afterwards
-        for(Taxi taxi : taxisToBeRemoved) {
+        for (Taxi taxi : taxisToBeRemoved) {
             taxiInOperationList.remove(taxi);
         }
 
@@ -141,9 +176,14 @@ public class Algorithm_Hubs extends Algorithm {
         return new Move('d', taxi, customer);
     }
 
+    public Move taxiDropPassenger(Taxi taxi, Customer customer) {
+        taxi.drop(customer, sharedData);
+        return new Move('d', taxi, customer);
+    }
+
     public Move taxiMoveHub(Taxi taxi) {
         Vertex nextVertex = taxi.getPosition().getNextTowards(taxi.getMovingToHub());
-        if(nextVertex.equals(taxi.getMovingToHub())) {
+        if (nextVertex.equals(taxi.getMovingToHub())) {
             taxi.setMovingToHub(null);
         }
         return taxiMove(taxi, nextVertex);
@@ -152,11 +192,10 @@ public class Algorithm_Hubs extends Algorithm {
     public Move taxiMoveCenter(Taxi taxi, ArrayList<Taxi> taxisToBeRemoved) {
         //Go back to center of hub
         Vertex nextVertex = taxi.getPosition().getVertexTowardsCenter();
-        if(nextVertex.isHubCenter()) {
+        if (nextVertex.isHubCenter()) {
             //Next move it'll be at the center
-            taxi.setGoingToCenter(false);
 
-            if(taxi.getCustomer() == null) {
+            if (taxi.getCustomer() == null) {
                 //We are not carrying any customers or moving to any
                 taxisToBeRemoved.add(taxi);
                 taxiReadyQueue.add(taxi);
