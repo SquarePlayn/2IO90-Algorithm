@@ -18,10 +18,16 @@ public class Scheduler {
 
     private int currentMinute;
 
+    private long startTime;
+    private boolean halfTimeReschedule = false;
+
+    private float custFrequencyDensityRatio = -1;
+
     public Scheduler(TaxiScanner scanner) {
         this.scanner = scanner;
         this.sharedData = new SharedData(Preamble.graph);
         currentMinute = 0;
+        startTime = System.nanoTime();
     }
 
     /**
@@ -64,14 +70,13 @@ public class Scheduler {
         //From here on, the Actual calling and being called of taxis starts
         initializeTaxis();
 
+        startSchedule();
+      
         sharedData.getGraph().buildHubs(sharedData.getRandom());
-
-        //TODO Make sure to redecide which algorithm to use at certain times
-        //TODO Make sure in reschedule that algo initialised and up to date
-        reschedule();
 
         //While there are lines to read, read them and advance to next minute
         while (scanner.hasNextLine()) {
+            checkRescheduleTime();
             readInput();
             advanceMinute(true);
             outputMinute(currentMinute);
@@ -79,18 +84,40 @@ public class Scheduler {
 
         Main.debug("No more call minutes to be read, time to complete delivering everyone");
 
+        reschedule(RescheduleType.END_OF_CALL_LIST);
+
         //Since there are no more lines to read, advance until all customers are delivered
         while (!sharedData.getCustomerList().isEmpty()) {
+            checkRescheduleTime();
             advanceMinute(false);
             outputMinute(currentMinute);
         }
     }
 
     /**
-     * Determines whether a new algorithm should be scheduled.
+     * Check the execution time of the algorithm to know when to reschedule
      */
-    private void reschedule() {
-        //TODO Add something better
+    private void checkRescheduleTime() {
+
+        if (halfTimeReschedule) {
+            return;
+        }
+
+        long difTime = System.nanoTime() - startTime;
+
+        if (difTime > 15000000000L) {
+
+            //reschedule(RescheduleType.HALF_TIME);
+            halfTimeReschedule = true;
+
+        }
+
+    }
+
+    /**
+     * Determines which algorithm to start with
+     */
+    private void startSchedule() {
 
 
         //if(sharedData.getGraph().getSize() > SCHEDULE_CUTOFF) {
@@ -112,15 +139,69 @@ public class Scheduler {
             }
         }
 
+        activeAlgorithm.getAlgorithm().initialize(sharedData);
 
-        //TODO Remove, since For testing
-        //activeAlgorithm = AlgorithmType.HUBS;
+    }
+
+    /**
+     * Determines whether a new algorithm should be scheduled
+     */
+    private void reschedule(RescheduleType rescheduleType) {
+
+        switch (rescheduleType) {
+
+            case END_OF_CALL_LIST:
+
+                //TODO implement something reasonable to calculate if need to reschedule
+
+                break;
+
+            case HALF_TIME:
+
+                // Calculate time difference since start
+                long difTime = System.nanoTime() - startTime;
+
+                // Calculate amount of customers already delivered
+                float customersDelivered = sharedData.getCustomerCallAmount() - sharedData.getCustomerList().size();
+
+                // Calculate amount of time it took to deliver those
+                float timeToDeliver = difTime / customersDelivered;
+
+                // Calculate time needed to finish running with current pace
+                float timeNeededToFinish = timeToDeliver * sharedData.getCustomerList().size();
+
+                System.out.println("DifTime: " + difTime + ", sharedDataCustomerAmount: " + sharedData.getCustomerCallAmount() + ", sharedDataCustomerList: " + sharedData.getCustomerList().size() + ", customersDelivered: " + customersDelivered + ", timeToDeliver: " + timeToDeliver + ", timeNeededToFinished: " + timeNeededToFinish + ", timeLeft: " + (30000000000L - difTime));
+
+                // 30s - difTime < timeNeededToFinish
+                if (30000000000L - difTime < timeNeededToFinish) {
+
+                    if (activeAlgorithm == AlgorithmType.SIMPLEQUEUE) {
+
+                        System.out.println("Switch to SimpleQueue not made, already running SimpleQueue");
+
+                    } else {
+
+                        activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
+
+                        System.out.println("Switched to SimpleQueue due to time issues");
+
+                    }
+
+                }
+
+                break;
+
+            default:
+                break;
+
+        }
+
+        // TODO on switching algo make sure to update lastUpdatedVariables.
 
         if(!activeAlgorithm.getAlgorithm().isInitialized()){
             activeAlgorithm.getAlgorithm().initialize(sharedData);
         }
 
-        // TODO on switching algo make sure to update lastUpdatedVariables.
     }
 
     /**
@@ -237,4 +318,12 @@ public class Scheduler {
             sharedData.getTaxiList().add(new Taxi(i));
         }
     }
+
+    private enum RescheduleType {
+
+        END_OF_CALL_LIST,
+        HALF_TIME;
+
+    }
+
 }

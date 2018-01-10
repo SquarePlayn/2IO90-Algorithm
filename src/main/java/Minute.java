@@ -42,6 +42,8 @@ public class Minute {
         String[] input = inputString.split(" ");
         int amountOfCalls = Integer.parseInt(input[0]);
 
+        sharedData.addCustomerCallAmount(amountOfCalls);
+
         for (int i = 0; i < amountOfCalls; i++) {
 
             //Read in each new customer
