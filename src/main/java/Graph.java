@@ -18,6 +18,11 @@ public class Graph {
     private ArrayList<Vertex> kCenters;
     private ArrayList<Vertex> kClusterCenters;
 
+
+    public static long findCenters = 0;
+    public static long findClusters = 0;
+
+
     Graph() {
         this.vertices = new ArrayList<>();
         this.hubs = new ArrayList<>();
@@ -205,6 +210,7 @@ public class Graph {
      * Find centers for the K-center problem
      */
     public void findKCenters() {
+        long start1 = System.nanoTime();
         if(kCenters.size() > 0) {
             Main.debug("Requested to find K-centers while already found");
             return;
@@ -219,6 +225,10 @@ public class Graph {
                 candidateNeighborCount = v.getNeigbours().size();
             }
         }
+
+
+        //Vertex candidate = getVertex(0);
+
 
         makeTempKCenter(candidate);
         System.out.println("First center: " + candidate.getId());
@@ -251,6 +261,8 @@ public class Graph {
             makeKCenter(tempKCenters.get( tempKCenters.size()-i ));
         }
 
+        findCenters += System.nanoTime() - start1;
+
         //TODO: Delete this in final version
         //Values that give an indication of how well the centers were chosen
         int maxDist = 0;
@@ -274,6 +286,8 @@ public class Graph {
         System.out.println("Max. distance to center: " + maxDist);
         System.out.println("Avg. distance to center: " + avgDist);
         //end of test stuff
+
+        long start2 = System.nanoTime();
 
         //Give each center a unique kClusterID
         for (int i=0; i<kCenters.size(); i++) {
@@ -340,6 +354,7 @@ public class Graph {
             ArrayList<Vertex> longestPath = new ArrayList<>();
             queue = new ArrayList<>();
             queue.add(longestPathStart);
+            longestPath.add(longestPathStart);
             while(!queue.isEmpty()) {
                 Vertex v = queue.remove(0);
                 if(v.getNextVertexInLongestPath() != null) {
@@ -349,9 +364,10 @@ public class Graph {
             }
 
             //Set the midway point in this path as the cluster center
-            longestPath.get(longestPath.size()/2-1).setKClusterCenter(true);
-            kClusterCenters.add(longestPath.get(longestPath.size()/2-1));
+            makeKClusterCenter(longestPath.get(longestPath.size()/2));
         }
+
+        findClusters += System.nanoTime() - start2;
 
         //TODO: Delete this in final version
         //Values that give an indication of how well the centers were chosen
@@ -387,6 +403,11 @@ public class Graph {
     public void makeTempKCenter(Vertex v) {
         tempKCenters.add(v);
         v.setTempKCenter(true);
+    }
+
+    public void makeKClusterCenter(Vertex v) {
+        kClusterCenters.add(v);
+        v.setKClusterCenter(true);
     }
 
     public ArrayList<Vertex> getKCenters() {
