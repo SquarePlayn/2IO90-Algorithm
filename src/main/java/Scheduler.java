@@ -195,6 +195,8 @@ public class Scheduler {
             activeAlgorithm.getAlgorithm().initialize(sharedData);
         }
 
+        activeAlgorithm.getAlgorithm().continueExecution(currentMinute, lastUpdatedVariables);
+
     }
 
     /**

@@ -23,25 +23,6 @@ public class Algorithm_SimpleQueue extends Algorithm {
         taxiReadyQueue = new ArrayList<>();
         taxiInOperationList = new ArrayList<>();
 
-        taxiReadyQueue.addAll(sharedData.getTaxiList()); // Initially all taxis are unoccupied, so add them all to the ready queue.
-
-        int customerHandled = 0;
-
-        for (Customer cust : sharedData.getCustomerList()) {
-
-            if (cust.isBeingHandled()) {
-
-                customerHandled++;
-
-            }
-
-        }
-
-        //System.out.println("customers: " + sharedData.getCustomerList().size());
-        //System.out.println("customerHandled: " + customerHandled);
-
-        dropAll = true;
-
     }
 
     @Override
@@ -65,21 +46,6 @@ public class Algorithm_SimpleQueue extends Algorithm {
             dropAll = false;
 
             customerQueue.addAll(sharedData.getCustomerList());
-
-            int customerHandled = 0;
-
-            for (Customer cust : sharedData.getCustomerList()) {
-
-                if (cust.isBeingHandled()) {
-
-                    customerHandled++;
-
-                }
-
-            }
-
-            //System.out.println("customers1: " + sharedData.getCustomerList().size());
-            //System.out.println("customerHandled1: " + customerHandled);
 
             return output;
 
@@ -152,21 +118,6 @@ public class Algorithm_SimpleQueue extends Algorithm {
                 output.add(new Move('d', taxi, customer));
 
                 customer.setBeingHandled(false);
-
-                int customerHandled = 0;
-
-                for (Customer cust : sharedData.getCustomerList()) {
-
-                    if (cust.isBeingHandled()) {
-
-                        customerHandled++;
-
-                    }
-
-                }
-
-                //System.out.println("customers2: " + sharedData.getCustomerList().size());
-                //System.out.println("customerHandled2: " + customerHandled);
 
             }
 
@@ -262,17 +213,10 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
     @Override
     public void continueExecution(int uptoMinute, HashMap<AlgoVar, Integer> lastUpdated) {
-        //fixme not sure how to check which taxi is going towards a destination yet.
 
-        // TODO use lastUpdated.
+        taxiReadyQueue.addAll(sharedData.getTaxiList()); // Initially all taxis are unoccupied, so add them all to the ready queue.
 
-        for (int i = lastUpdatedMinute + 1; i < uptoMinute; i++) {
-            Minute minute = sharedData.getIOHistory().getMinute(i);
-            readMinute(minute.getCalls());
-            processMoves(minute.getMoves());
-            lastUpdatedMinute++;
-        }
+        dropAll = true;
 
-        // TODO Make sure amount of passengers is maximum one.
     }
 }
