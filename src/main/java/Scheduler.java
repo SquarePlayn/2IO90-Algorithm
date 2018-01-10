@@ -82,7 +82,7 @@ public class Scheduler {
 
         Main.debug("No more call minutes to be read, time to complete delivering everyone");
 
-        reschedule(RescheduleType.END_OF_CALL_LIST);
+        //reschedule(RescheduleType.END_OF_CALL_LIST);
 
         //Since there are no more lines to read, advance until all customers are delivered
         while (!sharedData.getCustomerList().isEmpty()) {
@@ -103,11 +103,11 @@ public class Scheduler {
 
         long difTime = System.nanoTime() - startTime;
 
-        // DiffTIme > 15s
-        if (difTime > 15000000000L) {
+        // DiffTIme > 25s
+        if (difTime > 25000000000L) {
 
-            // Comment line below out if you want to reschedule at 15s
-            //reschedule(RescheduleType.HALF_TIME);
+            // Comment line below out if you want to reschedule at 25s
+            reschedule(RescheduleType.FIVE_SEC_LEFT);
             halfTimeReschedule = true;
 
         }
@@ -141,6 +141,8 @@ public class Scheduler {
 
         activeAlgorithm.getAlgorithm().initialize(sharedData);
 
+        //System.out.println("Active:" + activeAlgorithm.toString());
+
     }
 
     /**
@@ -154,8 +156,9 @@ public class Scheduler {
 
                 //TODO implement something reasonable to calculate if need to reschedule
 
-                break;
+                return;
 
+            case FIVE_SEC_LEFT:
             case HALF_TIME:
 
                 // Calculate time difference since start
@@ -173,11 +176,14 @@ public class Scheduler {
                 // 30s - difTime < timeNeededToFinish
                 if (30000000000L - difTime < timeNeededToFinish) {
 
-                    if (activeAlgorithm != AlgorithmType.SIMPLEQUEUE) {
+                    if (activeAlgorithm != AlgorithmType.HUBS) {
 
                         // Switching to SimpleQueue
-                        activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
+                        //System.out.println("test");
+                        activeAlgorithm = AlgorithmType.HUBS;
 
+                    } else {
+                        return;
                     }
 
                 }
@@ -317,7 +323,8 @@ public class Scheduler {
     private enum RescheduleType {
 
         END_OF_CALL_LIST,
-        HALF_TIME;
+        HALF_TIME,
+        FIVE_SEC_LEFT;
 
     }
 

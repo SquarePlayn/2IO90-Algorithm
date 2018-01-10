@@ -12,7 +12,7 @@ public class Taxi {
     private Customer customer; // Which customer we're on our way to pick up.
     private boolean inOperation; // Is doing something
 
-    //Used by LSD, SimpleQueue and hubs
+    //Used by LSD, SimpleQueue
     private ArrayList<Vertex> path; // Either the path towards the customer or the goal, depending on current state.
 
     //Used by hubs

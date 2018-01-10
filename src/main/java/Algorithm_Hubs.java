@@ -8,6 +8,8 @@ public class Algorithm_Hubs extends Algorithm {
     private HashSet<Taxi> taxiReadyQueue;
     private HashSet<Taxi> taxiInOperationList;
 
+    private boolean dropEveryone;
+
     @Override
     public void readMinute(ArrayList<Call> calls) {
         for(Call call : calls) {
@@ -38,11 +40,31 @@ public class Algorithm_Hubs extends Algorithm {
         taxiInOperationList = new HashSet<>();
 
         taxiReadyQueue.addAll(sharedData.getTaxiList()); // Initially all taxis are unoccupied, so add them all to the ready queue.
+
+        dropEveryone = false;
     }
 
     @Override
     public ArrayList<Move> processMinute(boolean callsLeft) {
         ArrayList<Move> moves = new ArrayList<>();
+
+        if(dropEveryone) {
+            ArrayList<Customer> droppers = new ArrayList<>();
+            for(Taxi taxi : sharedData.getTaxiList()) {
+                for(Customer customer : taxi.getPassengers()) {
+                    moves.add(new Move('d', taxi, customer) );
+                }
+            }
+
+            for(Move move : moves) {
+                taxiDrop(move.getTaxi(), move.getCustomer());
+            }
+
+            //Make all the customers be waiting
+            customerQueue.addAll(sharedData.getCustomerList());
+            dropEveryone = false;
+            return moves;
+        }
 
         //Assign waiting ready taxis to a customer
         while(!customerQueue.isEmpty() && !taxiReadyQueue.isEmpty()) {
@@ -177,6 +199,18 @@ public class Algorithm_Hubs extends Algorithm {
 
     @Override
     public void continueExecution(int upToMinute, HashMap<AlgoVar, Integer> lastUpdated) {
+        customerQueue.clear();
+        taxiReadyQueue.clear();
+        taxiInOperationList.clear();
+
+        for(Taxi taxi : sharedData.getTaxiList()) {
+            taxi.setCustomer(null);
+            taxi.setInOperation(false);
+        }
+
+        taxiReadyQueue.addAll(sharedData.getTaxiList());
+
+        dropEveryone = true;
 
     }
 }
