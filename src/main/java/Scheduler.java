@@ -22,6 +22,7 @@ public class Scheduler {
     private long startTime;
     private boolean halfTimeReschedule = false;
     private boolean hasUpscaledLSD = false;
+    private boolean hasUpscaledLSD2 = false;
 
     private float custFrequencyDensityRatio = -1;
 
@@ -99,11 +100,15 @@ public class Scheduler {
      */
     private void checkRescheduleTime(boolean callsLeft) {
 
+        long difTime = System.nanoTime() - startTime;
+
         if (halfTimeReschedule) {
+            if(difTime > 29000000000L && activeAlgorithm != AlgorithmType.HUBS) {
+                reschedule(RescheduleType.FIVE_SEC_LEFT);
+            }
             return;
         }
 
-        long difTime = System.nanoTime() - startTime;
 
         // DiffTIme > 25s
         if (difTime > 25000000000L) {
@@ -115,11 +120,25 @@ public class Scheduler {
         }
 
         int delivered = sharedData.getCustomerCallAmount() - sharedData.getCustomerList().size();
-        if(!callsLeft && currentMinute > 20 && !hasUpscaledLSD && delivered > 0 && difTime * sharedData.getCustomerCallAmount() / delivered < LSD_UPPERTIME) {
+
+        if (delivered * 2 > sharedData.getCustomerCallAmount() && !hasUpscaledLSD2 && activeAlgorithm == AlgorithmType.LSD) {
+            if(difTime < LSD_UPPERTIME) {
+                int amount = 1;
+                if(difTime * 3 < LSD_UPPERTIME) {
+                    amount++;
+                }
+                activeAlgorithm.getAlgorithm().upscale(amount);
+                System.err.println("Increased LSD Search depth by "+amount+" because halfway done and time left");
+                hasUpscaledLSD2 = true;
+            }
+        }
+
+        if(!callsLeft && currentMinute > sharedData.getCustomerCallAmount() + 20 && !hasUpscaledLSD && delivered > 0 && difTime * sharedData.getCustomerCallAmount() / delivered < LSD_UPPERTIME) {
 
             if (activeAlgorithm == AlgorithmType.LSD ) {
-                int amount = difTime * sharedData.getCustomerCallAmount() / delivered * 5 < LSD_UPPERTIME ? 1 : 2;
-                AlgorithmType.LSD.getAlgorithm().upscale(amount);
+                long exp = difTime * sharedData.getCustomerCallAmount() / delivered;
+                int amount = exp * 5 < LSD_UPPERTIME ? 1 : 2;
+                activeAlgorithm.getAlgorithm().upscale(amount);
                 System.err.println("Increasing LSD Search depth by "+amount);
             } else {
                 reschedule(RescheduleType.LOTS_OF_TIME_LEFT);
@@ -145,7 +164,7 @@ public class Scheduler {
             expectedCalls *= 0.624;
         }
 
-        if(expectedCalls > SCHEDULE_CUTOFF && sharedData.getGraph().getSize() > 50) {
+        if(expectedCalls > SCHEDULE_CUTOFF && sharedData.getGraph().getSize() > 50 || sharedData.getGraph().getSize() > 4000) {
             if(sharedData.getGraph().getSize() > HUBS_CUTOFF) {
                 activeAlgorithm = AlgorithmType.HUBS;
             } else {

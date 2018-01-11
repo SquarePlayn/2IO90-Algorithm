@@ -4,8 +4,8 @@ import java.util.stream.Collectors;
 
 public class Algorithm_LSD extends Algorithm {
 
-    private static final int RECURSE_MODIFIER = 10;
-    private static final int MAX_LOOKAHEAD = 7;
+    private static final int RECURSE_MODIFIER = 11;
+    private static final int MAX_LOOKAHEAD = 8;
     private static final int UPDATE_FREQUENCY = 1;
     private int lookaheadDist = 5;
     //The length of the path that the algo will consider ( min = 1 = only check neighbours).
@@ -94,12 +94,21 @@ public class Algorithm_LSD extends Algorithm {
         if(!(taxisNotInOperation.isEmpty() || customerOutsideList.isEmpty())) {
             HashMap<Taxi, Customer> hungOut = applyHungarian(taxisNotInOperation, customerOutsideList);
 
-            for (Map.Entry<Taxi, Customer> entry : hungOut.entrySet()) {
-                Taxi taxi = entry.getKey();
-                Customer customer = entry.getValue();
-                Vertex nextTowardsCustomer = taxi.getPosition().getNextTowards(customer.getPosition());
+            for(Taxi taxi : taxisNotInOperation) {
+                if(hungOut.containsKey(taxi)) {
+                    Customer customer = hungOut.get(taxi);
+                    Vertex nextTowardsCustomer = taxi.getPosition().getNextTowards(customer.getPosition());
 
-                minute.add(new Move(taxi, nextTowardsCustomer));
+                    minute.add(new Move(taxi, nextTowardsCustomer));
+                } else {
+                    if(sharedData.getGraph().getHubs().size() > 0) {
+                        //Hubs set up, move towards center
+                        Vertex toCenter = taxi.getPosition().getVertexTowardsCenter();
+                        if (toCenter != null) {
+                            minute.add(new Move(taxi, toCenter));
+                        }
+                    }
+                }
             }
         }
 
@@ -488,6 +497,7 @@ public class Algorithm_LSD extends Algorithm {
 
     public void upscale(int up) {
         lookaheadDist += up;
+        lookaheadDist = Math.min(1,Math.max(MAX_LOOKAHEAD, lookaheadDist));
     }
 
 }
