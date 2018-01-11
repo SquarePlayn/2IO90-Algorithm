@@ -30,6 +30,7 @@ public class Algorithm_LSD extends Algorithm {
         int posLookahead = RECURSE_MODIFIER -(int)(Math.log(sharedData.getGraph().getSize())/Math.log(2));
         setLookaheadDist(lookaheadDist = Math.max(1,Math.min(MAX_LOOKAHEAD,posLookahead)));
         Main.debug("Chose lookahead distance of "+lookaheadDist);
+        System.err.println("LSD using depth of "+lookaheadDist);
     }
 
     @Override

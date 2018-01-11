@@ -141,7 +141,7 @@ public class Scheduler {
 
         activeAlgorithm.getAlgorithm().initialize(sharedData);
 
-        //System.out.println("Active:" + activeAlgorithm.toString());
+        System.err.println("Using algorithm: " + activeAlgorithm.toString());
 
     }
 
@@ -186,16 +186,20 @@ public class Scheduler {
                         return;
                     }
 
+                } else {
+                    return;
                 }
 
                 break;
-
             default:
-                break;
+                return;
 
         }
 
         // TODO on switching algo make sure to update lastUpdatedVariables.
+
+        System.err.println("Switching to algorithm: " + activeAlgorithm.toString());
+
 
         if(!activeAlgorithm.getAlgorithm().isInitialized()){
             activeAlgorithm.getAlgorithm().initialize(sharedData);
