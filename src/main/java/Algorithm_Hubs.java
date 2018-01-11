@@ -213,4 +213,9 @@ public class Algorithm_Hubs extends Algorithm {
         dropEveryone = true;
 
     }
+
+    @Override
+    public void upscale(int i) {
+
+    }
 }

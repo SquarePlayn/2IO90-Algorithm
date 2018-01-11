@@ -8,7 +8,7 @@ public class Graph {
 
     //Needed for the organizing of hubs code
     private ArrayList<Vertex> hubs;
-    private int HUB_RADIUS = 7;
+    private int HUB_RADIUS = 5;
     private static final boolean HUB_OVERWRITE_SET = true; // If, when finding a vertex is closer to another hub,
     // it should be assigned to the closer one
     private static final boolean HUB_OVERWRITE_RECURSE = true; // If when you find a closer one, you also check its neighbours

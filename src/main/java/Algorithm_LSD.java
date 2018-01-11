@@ -4,7 +4,7 @@ import java.util.stream.Collectors;
 
 public class Algorithm_LSD extends Algorithm {
 
-    private static final int RECURSE_MODIFIER = 11;
+    private static final int RECURSE_MODIFIER = 10;
     private static final int MAX_LOOKAHEAD = 7;
     private static final int UPDATE_FREQUENCY = 1;
     private int lookaheadDist = 5;
@@ -460,7 +460,7 @@ public class Algorithm_LSD extends Algorithm {
                 Taxi taxi = taxiReadyQueue.get(t);
                 Customer customer = customerQueue.get(c);
 
-                costMatrix[t][c] = taxi.getPosition().getDistanceTo(customer.getPosition());
+                costMatrix[t][c] = taxi.getPosition().getDistanceTo(customer.getPosition()) * 10 / Math.max(1, lastUpdatedMinute - customer.getCreationMinute() + 2);
             }
         }
 
@@ -484,6 +484,10 @@ public class Algorithm_LSD extends Algorithm {
         }
 
         return output;
+    }
+
+    public void upscale(int up) {
+        lookaheadDist += up;
     }
 
 }

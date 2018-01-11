@@ -220,4 +220,9 @@ public class Algorithm_SimpleQueue extends Algorithm {
         dropAll = true;
 
     }
+
+    @Override
+    public void upscale(int i) {
+
+    }
 }

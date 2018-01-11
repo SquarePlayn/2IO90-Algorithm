@@ -109,7 +109,7 @@ public class Algorithm_Hungarian extends Algorithm {
                 Taxi taxi = taxiReadyQueue.get(t);
                 Customer customer = customerQueue.get(c);
 
-                costMatrix[t][c] = taxi.getPosition().getDistanceTo(customer.getPosition());
+                costMatrix[t][c] = taxi.getPosition().getDistanceTo(customer.getPosition()) * 10 / Math.max(1, lastUpdatedMinute - customer.getCreationMinute() + 2);
             }
         }
 
@@ -217,6 +217,11 @@ public class Algorithm_Hungarian extends Algorithm {
         }
 
         // TODO Make sure amount of passengers is maximum one.
+    }
+
+    @Override
+    public void upscale(int i) {
+
     }
 
     /**

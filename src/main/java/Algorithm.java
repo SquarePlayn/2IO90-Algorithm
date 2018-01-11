@@ -89,6 +89,8 @@ public abstract class Algorithm {
         return isInitialized;
     }
 
+    public abstract void upscale(int i);
+
     public enum AlgoVar {
         TAXI_CUSTOMER, TAXI_IN_OPERATION, TAXI_PATH;
     }
