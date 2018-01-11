@@ -266,11 +266,14 @@ public class Algorithm_LSD extends Algorithm {
             MoveOption bestOption = null;
             int bestScore = Integer.MIN_VALUE;
             for(Vertex neighbour : vertex.getNeigbours()) {
-                MoveOption candidate = computeBestScore(depthLeft-1, new ArrayList<>(path), neighbour, taxi);
+                ArrayList<Vertex> recursePath = new ArrayList<>(path);
+                MoveOption candidate = computeBestScore(depthLeft-1, recursePath, neighbour, taxi);
 
                 if(candidate.getScore() > bestScore) {
                     bestOption = candidate;
                     bestScore = candidate.getScore();
+                } else {
+                    recursePath = new ArrayList<>();
                 }
             }
             return bestOption;
@@ -375,6 +378,8 @@ public class Algorithm_LSD extends Algorithm {
             bestScore = Math.max(bestScore, score);
         }
 
+        //bestScore *= Math.max(1, Preamble.alpha * (lastUpdatedMinute  - customer.getCreationMinute() + 2));
+
         return bestScore;
     }
 
@@ -469,7 +474,7 @@ public class Algorithm_LSD extends Algorithm {
                 Taxi taxi = taxiReadyQueue.get(t);
                 Customer customer = customerQueue.get(c);
 
-                costMatrix[t][c] = taxi.getPosition().getDistanceTo(customer.getPosition()) * 10 / Math.max(1, lastUpdatedMinute - customer.getCreationMinute() + 2);
+                costMatrix[t][c] = taxi.getPosition().getDistanceTo(customer.getPosition()); //* 10 / Math.max(1, lastUpdatedMinute - customer.getCreationMinute() + 2);
             }
         }
 

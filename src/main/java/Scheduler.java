@@ -103,7 +103,7 @@ public class Scheduler {
         long difTime = System.nanoTime() - startTime;
 
         if (halfTimeReschedule) {
-            if(difTime > 29000000000L && activeAlgorithm != AlgorithmType.HUBS) {
+            if(difTime > 29000000000L && activeAlgorithm != AlgorithmType.HUBS && Taxi.MAX_CAPACITY > 1) {
                 reschedule(RescheduleType.FIVE_SEC_LEFT);
             }
             return;
@@ -111,7 +111,7 @@ public class Scheduler {
 
 
         // DiffTIme > 25s
-        if (difTime > 25000000000L) {
+        if (difTime > 25000000000L && Taxi.MAX_CAPACITY > 1) {
 
             // Comment line below out if you want to reschedule at 25s
             reschedule(RescheduleType.FIVE_SEC_LEFT);
