@@ -77,7 +77,7 @@ public class Scheduler {
 
         //While there are lines to read, read them and advance to next minute
         while (scanner.hasNextLine()) {
-            checkRescheduleTime(true);
+            //checkRescheduleTime(true);
             readInput();
             advanceMinute(true);
             outputMinute(currentMinute);
@@ -89,7 +89,7 @@ public class Scheduler {
 
         //Since there are no more lines to read, advance until all customers are delivered
         while (!sharedData.getCustomerList().isEmpty()) {
-            checkRescheduleTime(false);
+            //checkRescheduleTime(false);
             advanceMinute(false);
             outputMinute(currentMinute);
         }
@@ -177,7 +177,7 @@ public class Scheduler {
                 activeAlgorithm = AlgorithmType.LSD;
             }
         }
-
+        activeAlgorithm = AlgorithmType.HUBS;
         activeAlgorithm.getAlgorithm().initialize(sharedData);
 
         if(activeAlgorithm == AlgorithmType.LSD && sharedData.getGraph().getSize() < 200) {
