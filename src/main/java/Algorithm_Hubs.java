@@ -68,20 +68,28 @@ public class Algorithm_Hubs extends Algorithm {
         }
 
         //Assign waiting ready taxis to a customer
-        while (!customerQueue.isEmpty() && !taxiReadyQueue.isEmpty()) {
-            Taxi taxi = taxiReadyQueue.iterator().next(); //Getting some/*any* taxi that is ready
-            Customer customer = customerQueue.iterator().next(); //Get some/*any* customer that is waiting
+        Iterator<Taxi> taxiIt = taxiReadyQueue.iterator();
+        Iterator<Customer> customerIt = customerQueue.iterator();
+
+        while (taxiIt.hasNext() && customerIt.hasNext()) {
+            Taxi taxi = taxiIt.next(); //Getting some/*any* taxi that is ready
+
+            if (taxi.getCustomer() != null) {
+                continue;
+            }
+
+            Customer customer = customerIt.next(); //Get some/*any* customer that is waiting
 
             taxi.setCustomer(customer);
             customer.setBeingHandled(true);
-            customerQueue.remove(customer);
-            taxiReadyQueue.remove(taxi);
+
+            customerIt.remove();
+            taxiIt.remove();
             taxiInOperationList.add(taxi);
         }
-
         ArrayList<Taxi> taxisToBeRemoved = new ArrayList<>(); //ArrayList to catch the to-be-readyupped taxis
+        // TODO use iterator instead of separate arraylist to store removes.
         for (Taxi taxi : taxiInOperationList) {
-
             if (taxi.isGoingToCenter()) {
                 if (!taxi.getPosition().isHubCenter()) {
 
@@ -97,9 +105,19 @@ public class Algorithm_Hubs extends Algorithm {
                             Customer customer = iterator.next();
                             iterator.remove();
                             moves.add(taxiPickup(taxi, customer));
+                            customerQueue.remove(customer);
 
+                            // If this customer was already assigned to a taxi we should remove it from there.
+                            for (Taxi inOp : taxiInOperationList) {
+                                if (inOp.getCustomer() != null && inOp.getCustomer().equals(customer)) {
+                                    inOp.setCustomer(null);
+                                    inOp.setMovingToHub(null);
+                                    inOp.setGoingToCenter(!inOp.getPosition().isHubCenter());
+
+                                    taxisToBeRemoved.add(inOp);
+                                }
+                            }
                         }
-
                     }
 
                 } else {
@@ -108,7 +126,7 @@ public class Algorithm_Hubs extends Algorithm {
                     for (int i = 0; i < taxi.getPassengers().size(); i++) {
 
                         Customer customer = taxi.getPassengers().get(i);
-
+                        // TODO don't remove passengers that need to go to the next hub as well.
                         if (customer == taxi.getCustomer()) {
                             continue;
                         }
@@ -134,21 +152,24 @@ public class Algorithm_Hubs extends Algorithm {
                     //Curerntly moving towards another hub
                     moves.add(taxiMoveHub(taxi));
                 } else {
-                    //Not curerntly moving towards another hub
+                    //Not currently moving towards another hub
                     if (taxi.getPassengers().isEmpty()) {
                         //hasn't picked up the passenger yet
-                        if (taxi.getPosition().equals(taxi.getCustomer().getPosition())) {
-                            //At customer
-                            moves.add(taxiPickup(taxi, taxi.getCustomer()));
-                        } else {
-                            //Not yet at customer
-                            if (taxi.getPosition().getHub().equals(taxi.getCustomer().getPosition().getHub())) {
-                                //On the right hub
-                                moves.add(taxiMove(taxi, taxi.getPosition().getNextTowards(taxi.getCustomer().getPosition())));
+                        if (taxi.getCustomer() != null) {
+                            // If there is no customer to drive to, just wait.
+                            if (taxi.getPosition().equals(taxi.getCustomer().getPosition())) {
+                                //At customer
+                                moves.add(taxiPickup(taxi, taxi.getCustomer()));
                             } else {
-                                //Not on the right hub yet
-                                taxi.setMovingToHub(taxi.getPosition().getHub().getNextHubTowardsHub(taxi.getCustomer().getPosition().getHub()));
-                                moves.add(taxiMoveHub(taxi));
+                                //Not yet at customer
+                                if (taxi.getPosition().getHub().equals(taxi.getCustomer().getPosition().getHub())) {
+                                    //On the right hub
+                                    moves.add(taxiMove(taxi, taxi.getPosition().getNextTowards(taxi.getCustomer().getPosition())));
+                                } else {
+                                    //Not on the right hub yet
+                                    taxi.setMovingToHub(taxi.getPosition().getHub().getNextHubTowardsHub(taxi.getCustomer().getPosition().getHub()));
+                                    moves.add(taxiMoveHub(taxi));
+                                }
                             }
                         }
                     } else {
