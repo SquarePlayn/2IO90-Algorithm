@@ -125,7 +125,7 @@ public class Scheduler {
             if(difTime < LSD_UPPERTIME) {
                 int amount = 1;
                 if(difTime * 3 < LSD_UPPERTIME) {
-                    amount++;
+                    amount += 5;
                 }
                 activeAlgorithm.getAlgorithm().upscale(amount);
                 System.err.println("Increased LSD Search depth by "+amount+" because halfway done and time left");
@@ -137,7 +137,7 @@ public class Scheduler {
 
             if (activeAlgorithm == AlgorithmType.LSD ) {
                 long exp = difTime * sharedData.getCustomerCallAmount() / delivered;
-                int amount = exp * 5 < LSD_UPPERTIME ? 1 : 2;
+                int amount = exp * 7 < LSD_UPPERTIME ? 2 : 4;
                 activeAlgorithm.getAlgorithm().upscale(amount);
                 System.err.println("Increasing LSD Search depth by "+amount);
             } else {
@@ -153,7 +153,6 @@ public class Scheduler {
      */
     private void startSchedule() {
 
-
         //if(sharedData.getGraph().getSize() > SCHEDULE_CUTOFF) {
         int expectedCalls = sharedData.getGraph().getSize(); // If no testminutes, go off of graph size
         if(Preamble.testMinutes > 1) {
@@ -164,14 +163,14 @@ public class Scheduler {
             expectedCalls *= 0.624;
         }
 
-        if(expectedCalls > SCHEDULE_CUTOFF && sharedData.getGraph().getSize() > 50 || sharedData.getGraph().getSize() > 4000) {
+        if((sharedData.getGraph().getSize() > 1000 && sharedData.getTaxiList().size() > sharedData.getGraph().getSize()) || (expectedCalls > SCHEDULE_CUTOFF && sharedData.getGraph().getSize() > 50 && sharedData.getGraph().getSize() * 4 > expectedCalls || sharedData.getGraph().getSize() > 4000)) {
             if(sharedData.getGraph().getSize() > HUBS_CUTOFF) {
                 activeAlgorithm = AlgorithmType.HUBS;
             } else {
                 activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
             }
         } else {
-            if (Taxi.MAX_CAPACITY <= 1 && sharedData.getGraph().getSize() > HUNGARIAN_MINSIZE) {
+            if ((Taxi.MAX_CAPACITY <= 1 || (sharedData.getTaxiList().size() * 5 > sharedData.getGraph().getSize() && sharedData.getGraph().getSize() > HUNGARIAN_MINSIZE && sharedData.getGraph().getSize() * 4 < expectedCalls))) {
                 activeAlgorithm = AlgorithmType.HUNGARIAN;
             } else {
                 activeAlgorithm = AlgorithmType.LSD;
