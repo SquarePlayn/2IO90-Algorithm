@@ -3,9 +3,10 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class Scheduler {
-    private static final int SCHEDULE_CUTOFF = 999;
+    private static final int SCHEDULE_CUTOFF = 1199;
     private static final int HUNGARIAN_MINSIZE = 100;
     private static final int HUBS_CUTOFF = 3000;
+    private static final long LSD_UPPERTIME = 9000000000L;
 
     private TaxiScanner scanner;
     private SharedData sharedData;
@@ -20,6 +21,8 @@ public class Scheduler {
 
     private long startTime;
     private boolean halfTimeReschedule = false;
+    private boolean hasUpscaledLSD = false;
+    private boolean hasUpscaledLSD2 = false;
 
     private float custFrequencyDensityRatio = -1;
 
@@ -74,7 +77,7 @@ public class Scheduler {
 
         //While there are lines to read, read them and advance to next minute
         while (scanner.hasNextLine()) {
-            checkRescheduleTime();
+            checkRescheduleTime(true);
             readInput();
             advanceMinute(true);
             outputMinute(currentMinute);
@@ -82,11 +85,11 @@ public class Scheduler {
 
         Main.debug("No more call minutes to be read, time to complete delivering everyone");
 
-        reschedule(RescheduleType.END_OF_CALL_LIST);
+        //reschedule(RescheduleType.END_OF_CALL_LIST);
 
         //Since there are no more lines to read, advance until all customers are delivered
         while (!sharedData.getCustomerList().isEmpty()) {
-            checkRescheduleTime();
+            checkRescheduleTime(false);
             advanceMinute(false);
             outputMinute(currentMinute);
         }
@@ -95,21 +98,52 @@ public class Scheduler {
     /**
      * Check the execution time of the algorithm to know when to reschedule
      */
-    private void checkRescheduleTime() {
-
-        if (halfTimeReschedule) {
-            return;
-        }
+    private void checkRescheduleTime(boolean callsLeft) {
 
         long difTime = System.nanoTime() - startTime;
 
-        // DiffTIme > 15s
-        if (difTime > 15000000000L) {
+        if (halfTimeReschedule) {
+            if(difTime > 29000000000L && activeAlgorithm != AlgorithmType.HUBS && Taxi.MAX_CAPACITY > 1) {
+                reschedule(RescheduleType.FIVE_SEC_LEFT);
+            }
+            return;
+        }
 
-            // Comment line below out if you want to reschedule at 15s
-            //reschedule(RescheduleType.HALF_TIME);
+
+        // DiffTIme > 25s
+        if (difTime > 25000000000L && Taxi.MAX_CAPACITY > 1) {
+
+            // Comment line below out if you want to reschedule at 25s
+            reschedule(RescheduleType.FIVE_SEC_LEFT);
             halfTimeReschedule = true;
 
+        }
+
+        int delivered = sharedData.getCustomerCallAmount() - sharedData.getCustomerList().size();
+
+        if (delivered * 2 > sharedData.getCustomerCallAmount() && !hasUpscaledLSD2 && activeAlgorithm == AlgorithmType.LSD) {
+            if(difTime < LSD_UPPERTIME) {
+                int amount = 1;
+                if(difTime * 3 < LSD_UPPERTIME) {
+                    amount++;
+                }
+                activeAlgorithm.getAlgorithm().upscale(amount);
+                System.err.println("Increased LSD Search depth by "+amount+" because halfway done and time left");
+                hasUpscaledLSD2 = true;
+            }
+        }
+
+        if(!callsLeft && currentMinute > sharedData.getCustomerCallAmount() + 20 && !hasUpscaledLSD && delivered > 0 && difTime * sharedData.getCustomerCallAmount() / delivered < LSD_UPPERTIME) {
+
+            if (activeAlgorithm == AlgorithmType.LSD ) {
+                long exp = difTime * sharedData.getCustomerCallAmount() / delivered;
+                int amount = exp * 5 < LSD_UPPERTIME ? 1 : 2;
+                activeAlgorithm.getAlgorithm().upscale(amount);
+                System.err.println("Increasing LSD Search depth by "+amount);
+            } else {
+                reschedule(RescheduleType.LOTS_OF_TIME_LEFT);
+            }
+            hasUpscaledLSD = true;
         }
 
     }
@@ -125,7 +159,12 @@ public class Scheduler {
         if(Preamble.testMinutes > 1) {
             expectedCalls = testCalls * (Preamble.callMinutes - Preamble.testMinutes) / Preamble.testMinutes;
         }
-        if(expectedCalls > SCHEDULE_CUTOFF) {
+
+        if(Taxi.MAX_CAPACITY >= 10) {
+            expectedCalls *= 0.624;
+        }
+
+        if(expectedCalls > SCHEDULE_CUTOFF && sharedData.getGraph().getSize() > 50 || sharedData.getGraph().getSize() > 4000) {
             if(sharedData.getGraph().getSize() > HUBS_CUTOFF) {
                 activeAlgorithm = AlgorithmType.HUBS;
             } else {
@@ -141,6 +180,13 @@ public class Scheduler {
 
         activeAlgorithm.getAlgorithm().initialize(sharedData);
 
+        if(activeAlgorithm == AlgorithmType.LSD && sharedData.getGraph().getSize() < 200) {
+            int scale = expectedCalls * 4 / SCHEDULE_CUTOFF;
+            activeAlgorithm.getAlgorithm().upscale(-scale);
+        }
+
+        System.err.println("Using algorithm: " + activeAlgorithm.toString());
+
     }
 
     /**
@@ -154,8 +200,13 @@ public class Scheduler {
 
                 //TODO implement something reasonable to calculate if need to reschedule
 
+                return;
+
+            case LOTS_OF_TIME_LEFT:
+                activeAlgorithm = AlgorithmType.LSD;
                 break;
 
+            case FIVE_SEC_LEFT:
             case HALF_TIME:
 
                 // Calculate time difference since start
@@ -173,23 +224,30 @@ public class Scheduler {
                 // 30s - difTime < timeNeededToFinish
                 if (30000000000L - difTime < timeNeededToFinish) {
 
-                    if (activeAlgorithm != AlgorithmType.SIMPLEQUEUE) {
+                    if (activeAlgorithm != AlgorithmType.HUBS) {
 
                         // Switching to SimpleQueue
-                        activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
+                        //System.out.println("test");
+                        activeAlgorithm = AlgorithmType.HUBS;
 
+                    } else {
+                        return;
                     }
 
+                } else {
+                    return;
                 }
 
                 break;
-
             default:
-                break;
+                return;
 
         }
 
         // TODO on switching algo make sure to update lastUpdatedVariables.
+
+        System.err.println("Switching to algorithm: " + activeAlgorithm.toString());
+
 
         if(!activeAlgorithm.getAlgorithm().isInitialized()){
             activeAlgorithm.getAlgorithm().initialize(sharedData);
@@ -317,7 +375,8 @@ public class Scheduler {
     private enum RescheduleType {
 
         END_OF_CALL_LIST,
-        HALF_TIME;
+        HALF_TIME,
+        FIVE_SEC_LEFT, LOTS_OF_TIME_LEFT;
 
     }
 

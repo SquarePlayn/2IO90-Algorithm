@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 public class Algorithm_LSD extends Algorithm {
 
     private static final int RECURSE_MODIFIER = 11;
-    private static final int MAX_LOOKAHEAD = 7;
+    private static final int MAX_LOOKAHEAD = 8;
     private static final int UPDATE_FREQUENCY = 1;
     private int lookaheadDist = 5;
     //The length of the path that the algo will consider ( min = 1 = only check neighbours).
@@ -30,6 +30,7 @@ public class Algorithm_LSD extends Algorithm {
         int posLookahead = RECURSE_MODIFIER -(int)(Math.log(sharedData.getGraph().getSize())/Math.log(2));
         setLookaheadDist(lookaheadDist = Math.max(1,Math.min(MAX_LOOKAHEAD,posLookahead)));
         Main.debug("Chose lookahead distance of "+lookaheadDist);
+        System.err.println("LSD using depth of "+lookaheadDist);
     }
 
     @Override
@@ -93,12 +94,21 @@ public class Algorithm_LSD extends Algorithm {
         if(!(taxisNotInOperation.isEmpty() || customerOutsideList.isEmpty())) {
             HashMap<Taxi, Customer> hungOut = applyHungarian(taxisNotInOperation, customerOutsideList);
 
-            for (Map.Entry<Taxi, Customer> entry : hungOut.entrySet()) {
-                Taxi taxi = entry.getKey();
-                Customer customer = entry.getValue();
-                Vertex nextTowardsCustomer = taxi.getPosition().getNextTowards(customer.getPosition());
+            for(Taxi taxi : taxisNotInOperation) {
+                if(hungOut.containsKey(taxi)) {
+                    Customer customer = hungOut.get(taxi);
+                    Vertex nextTowardsCustomer = taxi.getPosition().getNextTowards(customer.getPosition());
 
-                minute.add(new Move(taxi, nextTowardsCustomer));
+                    minute.add(new Move(taxi, nextTowardsCustomer));
+                } else {
+                    if(sharedData.getGraph().getHubs().size() > 0) {
+                        //Hubs set up, move towards center
+                        Vertex toCenter = taxi.getPosition().getVertexTowardsCenter();
+                        if (toCenter != null) {
+                            minute.add(new Move(taxi, toCenter));
+                        }
+                    }
+                }
             }
         }
 
@@ -256,11 +266,14 @@ public class Algorithm_LSD extends Algorithm {
             MoveOption bestOption = null;
             int bestScore = Integer.MIN_VALUE;
             for(Vertex neighbour : vertex.getNeigbours()) {
-                MoveOption candidate = computeBestScore(depthLeft-1, new ArrayList<>(path), neighbour, taxi);
+                ArrayList<Vertex> recursePath = new ArrayList<>(path);
+                MoveOption candidate = computeBestScore(depthLeft-1, recursePath, neighbour, taxi);
 
                 if(candidate.getScore() > bestScore) {
                     bestOption = candidate;
                     bestScore = candidate.getScore();
+                } else {
+                    recursePath = new ArrayList<>();
                 }
             }
             return bestOption;
@@ -365,6 +378,8 @@ public class Algorithm_LSD extends Algorithm {
             bestScore = Math.max(bestScore, score);
         }
 
+        //bestScore *= Math.max(1, Preamble.alpha * (lastUpdatedMinute  - customer.getCreationMinute() + 2));
+
         return bestScore;
     }
 
@@ -459,7 +474,7 @@ public class Algorithm_LSD extends Algorithm {
                 Taxi taxi = taxiReadyQueue.get(t);
                 Customer customer = customerQueue.get(c);
 
-                costMatrix[t][c] = taxi.getPosition().getDistanceTo(customer.getPosition());
+                costMatrix[t][c] = taxi.getPosition().getDistanceTo(customer.getPosition()); //* 10 / Math.max(1, lastUpdatedMinute - customer.getCreationMinute() + 2);
             }
         }
 
@@ -483,6 +498,11 @@ public class Algorithm_LSD extends Algorithm {
         }
 
         return output;
+    }
+
+    public void upscale(int up) {
+        lookaheadDist += up;
+        lookaheadDist = Math.min(1,Math.max(MAX_LOOKAHEAD, lookaheadDist));
     }
 
 }
