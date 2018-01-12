@@ -220,37 +220,49 @@ public class Graph {
             return;
         }
 
-        //Always make vertex 0 the first cluster origin
-        makeClusterOrigin(getVertex(0));
-
-        //Find the other origins by consecutively finding which vertex is furthest away from any already chosen origin
+        //Find the cluster origins
         ArrayList<Vertex> queue = new ArrayList<>();
-        for(int i=0; i<Preamble.amountOfTaxis-1; i++) {
-            //Start the BFS from the already found origins
-            queue.addAll(clusterOrigins);
+        if(Preamble.amountOfTaxis < getSize()/3) { //Use urinal-algorithm for few taxis
+            System.out.println("Strategy A");
+            //Always make vertex 0 the first cluster origin
+            makeClusterOrigin(getVertex(0));
 
-            while(!queue.isEmpty()) {
-                //Run a BFS
-                Vertex v = queue.remove(0);
-                for(Vertex neighbor : v.getNeigbours()) {
-                    if(!neighbor.isClusterOrigin() && v.getkCenterVisited() > neighbor.getkCenterVisited()) {
-                        queue.add(neighbor);
-                        neighbor.increaseKCenterVisited();
+            //Find the other origins by consecutively finding which vertex is furthest away from any already chosen origin
+            for(int i = 0; i < Preamble.amountOfTaxis - 1; i++) {
+                //Start the BFS from the already found origins
+                queue.addAll(clusterOrigins);
+
+                while(!queue.isEmpty()) {
+                    //Run a BFS
+                    Vertex v = queue.remove(0);
+                    for(Vertex neighbor : v.getNeigbours()) {
+                        if(!neighbor.isClusterOrigin() && v.getkCenterVisited() > neighbor.getkCenterVisited()) {
+                            queue.add(neighbor);
+                            neighbor.increaseKCenterVisited();
+                        }
+                    }
+
+                    //If this is the last vertex to be visited, make it a cluster origin
+                    if(queue.isEmpty()) {
+                        makeClusterOrigin(v);
                     }
                 }
+            }
+        } else { //Choose origins randomly for many taxis
+            System.out.println("Strategy B");
+            ArrayList<Vertex> randomOrder = new ArrayList<>();
+            randomOrder.addAll(vertices);
+            Collections.shuffle(randomOrder);
 
-                //If this is the last vertex to be visited, make it a cluster origin
-                if (queue.isEmpty()) {
-                    makeClusterOrigin(v);
-                }
+            for(int i=0; i<Math.min(getSize(), Preamble.amountOfTaxis); i++) {
+                makeClusterOrigin(randomOrder.get(i));
             }
         }
-
         findCenters += System.nanoTime() - start1;
 
         //TODO: Delete this in final version
         //Values that give an indication of how well the origins were chosen
-        int maxDist = 0;
+        /*int maxDist = 0;
         double avgDist = 0;
         for (Vertex v : vertices) {
             int closest = Integer.MAX_VALUE;
@@ -266,10 +278,12 @@ public class Graph {
             avgDist += closest;
         }
 
+
         avgDist /= getSize();
 
         System.out.println("Max. distance to origin: " + maxDist);
         System.out.println("Avg. distance to origin: " + avgDist);
+        System.out.println("  (size = " + clusterOrigins.size() + ")");*/
         //end of test stuff
 
         long start2 = System.nanoTime();
