@@ -219,22 +219,22 @@ public class Graph {
             return;
         }
 
-        //Sort vertices by decreasing amount of training calls
-        ArrayList<Vertex> verticesByTestCalls = new ArrayList<>();
-        verticesByTestCalls.addAll(vertices);
-        verticesByTestCalls.sort((o1, o2) ->
-                Integer.compare(o2.getAmountOfTrainingCalls(), o1.getAmountOfTrainingCalls()));
-
-        //Figure out if the calls are roughly uniformly distributed or not
+        //Figure out if the calls are roughly uniformly distributed or not (using standard deviation of #calls per vertex)
         double avgAmountOfTrainingCalls = 0;
         boolean uniformCallDistribution = true;
         for(Vertex v : vertices) {
             avgAmountOfTrainingCalls += v.getAmountOfTrainingCalls();
         }
         avgAmountOfTrainingCalls /= getSize();
-        if(verticesByTestCalls.get(0).getAmountOfTrainingCalls() >= 8*avgAmountOfTrainingCalls) {
+        double stdDevOfTrainingCalls = 0;
+        for(Vertex v : vertices)
+            stdDevOfTrainingCalls += (v.getAmountOfTrainingCalls()-avgAmountOfTrainingCalls)*
+                    (v.getAmountOfTrainingCalls()-avgAmountOfTrainingCalls);
+        stdDevOfTrainingCalls = Math.sqrt(stdDevOfTrainingCalls/(getSize()-1));
+        if(stdDevOfTrainingCalls > 1) {
             uniformCallDistribution = false;
         }
+
         //Find the cluster origins
         ArrayList<Vertex> queue = new ArrayList<>();
         if(Preamble.amountOfTaxis < getSize()/3) { //Use greedy approximation for few taxis
@@ -245,9 +245,15 @@ public class Graph {
                 makeClusterOrigin(getVertex(0));
                 System.out.println("uniform");
             }else {
+                //Sort vertices by decreasing amount of training calls
+                ArrayList<Vertex> verticesByTrainingCalls = new ArrayList<>();
+                verticesByTrainingCalls.addAll(vertices);
+                verticesByTrainingCalls.sort((o1, o2) ->
+                        Integer.compare(o2.getAmountOfTrainingCalls(), o1.getAmountOfTrainingCalls()));
+
                 //Make the vertices with the most calls, the first third of the cluster origins
                 for(int i=0; i<Preamble.amountOfTaxis/3; i++) {
-                    makeClusterOrigin(verticesByTestCalls.get(i));
+                    makeClusterOrigin(verticesByTrainingCalls.get(i));
                 }
                 System.out.println("not uniform");
             }
