@@ -21,6 +21,11 @@ public enum AlgorithmType {
         }
     },
 
+    HUBS() {
+        @Override
+        public void reset() { this.algorithm = new Algorithm_Hubs(); }
+    }
+
     ;
 
     protected Algorithm algorithm;

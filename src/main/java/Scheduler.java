@@ -83,15 +83,15 @@ public class Scheduler {
      */
     public void realMinutes() {
         //From here on, the Actual calling and being called of taxis starts
+        //TODO Make sure to redecide which algorithm to use at certain times
+        //TODO Make sure in reschedule that algo initialised and up to date
+        reschedule();
+
         initializeTaxis();
 
         sharedData.getGraph().buildHubs(sharedData.getRandom());
 
         sharedData.getGraph().findKCenters();
-
-        //TODO Make sure to redecide which algorithm to use at certain times
-        //TODO Make sure in reschedule that algo initialised and up to date
-        reschedule();
 
         //While there are lines to read, read them and advance to next minute
         while (scanner.hasNextLine()) {
@@ -159,10 +159,10 @@ public class Scheduler {
 
         String output;
 
-        if(Preamble.amountOfTaxis > sharedData.getGraph().getSize()/2) {
-            output = initializeTaxis_random();
-        } else {
+        if(activeAlgorithm == AlgorithmType.HUBS) {
             output = initializeTaxis_hubs();
+        } else {
+            output = initializeTaxis_kcenter();
         }
 
         output += "c";
@@ -175,13 +175,14 @@ public class Scheduler {
      * Initializes each taxi to a random position and prints that to the output
      * Only run when you need to output the first (init) line of output
      */
-    private String initializeTaxis_random() {
+
+    private String initializeTaxis_kcenter() {
         Main.debug("Using the random() type of taxi distribution");
         StringBuilder output = new StringBuilder();
-        Random random = sharedData.getRandom();
+        sharedData.getGraph().findKCenters();
 
         for (Taxi taxi : sharedData.getTaxiList()) {
-            taxi.setPosition(sharedData.getGraph().getVertex(random.nextInt(sharedData.getGraph().getSize())));
+            taxi.setPosition(sharedData.getGraph().getKCenters().get(taxi.getId()));
             output.append("m ")
                     .append(taxi.getOutputId())
                     .append(" ")
