@@ -63,7 +63,15 @@ public class Scheduler {
         initializeTaxis(); //TODO Might consider doing a simpler taxi initializer such as always random at this position
         for (int i = 1; i < Preamble.testMinutes; i++) {
             Main.debug("Starting testMinute "+i);
-            scanner.nextLine();
+
+            //Store in each vertex, how many calls are coming in from there
+            String inputString = scanner.nextLine();
+            String[] input = inputString.split(" ");
+            int amountOfCalls = Integer.parseInt(input[0]);
+            for (int j = 0; j < amountOfCalls; j++) {
+                Vertex position = sharedData.getGraph().getVertex(Integer.parseInt(input[j * 2 + 1]));
+                position.increaseAmountOfTrainingCalls();
+            }
             scanner.println("c");
         }
         scanner.nextLine();

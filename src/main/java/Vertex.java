@@ -33,6 +33,7 @@ public class Vertex {
     private int clusterID;
     private boolean isClusterOrigin;
     private Vertex nextVertexInLongestPath;
+    private int amountOfTrainingCalls;
 
     //BFS Improvements
     boolean bfsStarted = false;
@@ -61,6 +62,7 @@ public class Vertex {
         clusterID = -1;
         isClusterOrigin = false;
         nextVertexInLongestPath = null;
+        amountOfTrainingCalls = 0;
     }
 
     public void initializeHub(int hubID) {
@@ -326,5 +328,13 @@ public class Vertex {
 
     public void setNextVertexInLongestPath(Vertex v) {
         nextVertexInLongestPath = v;
+    }
+
+    public int getAmountOfTrainingCalls() {
+        return amountOfTrainingCalls;
+    }
+
+    public void increaseAmountOfTrainingCalls() {
+        amountOfTrainingCalls++;
     }
 }

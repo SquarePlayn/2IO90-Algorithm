@@ -202,7 +202,6 @@ public class Graph {
                 }
             }
         }
-
     }
 
     /**
@@ -220,15 +219,40 @@ public class Graph {
             return;
         }
 
+        //Sort vertices by decreasing amount of training calls
+        ArrayList<Vertex> verticesByTestCalls = new ArrayList<>();
+        verticesByTestCalls.addAll(vertices);
+        verticesByTestCalls.sort((o1, o2) ->
+                Integer.compare(o2.getAmountOfTrainingCalls(), o1.getAmountOfTrainingCalls()));
+
+        //Figure out if the calls are roughly uniformly distributed or not
+        double avgAmountOfTrainingCalls = 0;
+        boolean uniformCallDistribution = true;
+        for(Vertex v : vertices) {
+            avgAmountOfTrainingCalls += v.getAmountOfTrainingCalls();
+        }
+        avgAmountOfTrainingCalls /= getSize();
+        if(verticesByTestCalls.get(0).getAmountOfTrainingCalls() >= 8*avgAmountOfTrainingCalls) {
+            uniformCallDistribution = false;
+        }
         //Find the cluster origins
         ArrayList<Vertex> queue = new ArrayList<>();
-        if(Preamble.amountOfTaxis < getSize()/3) { //Use urinal-algorithm for few taxis
+        if(Preamble.amountOfTaxis < getSize()/3) { //Use greedy approximation for few taxis
             System.out.println("Strategy A");
-            //Always make vertex 0 the first cluster origin
-            makeClusterOrigin(getVertex(0));
 
+            if(uniformCallDistribution) {
+                //Make vertex 0 the first cluster origin
+                makeClusterOrigin(getVertex(0));
+                System.out.println("uniform");
+            }else {
+                //Make the vertices with the most calls, the first third of the cluster origins
+                for(int i=0; i<Preamble.amountOfTaxis/3; i++) {
+                    makeClusterOrigin(verticesByTestCalls.get(i));
+                }
+                System.out.println("not uniform");
+            }
             //Find the other origins by consecutively finding which vertex is furthest away from any already chosen origin
-            for(int i = 0; i < Preamble.amountOfTaxis - 1; i++) {
+            while (clusterOrigins.size() < Preamble.amountOfTaxis) {
                 //Start the BFS from the already found origins
                 queue.addAll(clusterOrigins);
 
@@ -250,6 +274,7 @@ public class Graph {
             }
         } else { //Choose origins randomly for many taxis
             System.out.println("Strategy B");
+            //Randomize the order of the vertices
             ArrayList<Vertex> randomOrder = new ArrayList<>();
             randomOrder.addAll(vertices);
             Collections.shuffle(randomOrder);
