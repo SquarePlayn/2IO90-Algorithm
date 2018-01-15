@@ -85,8 +85,6 @@ public class Scheduler {
 
         startSchedule();
 
-        initializeTaxis();
-
         sharedData.getGraph().buildHubs(sharedData.getRandom());
 
         //While there are lines to read, read them and advance to next minute
@@ -299,8 +297,8 @@ public class Scheduler {
             output = initializeTaxis_graphCenter();
         } else {
             //TODO: replace in final version
-            /*output = initializeTaxis_kcenter();*/
-            output = initializeTaxis_graphCenter();
+            output = initializeTaxis_kcenter();
+            //output = initializeTaxis_graphCenter();
         }
 
         output += "c";
@@ -320,7 +318,7 @@ public class Scheduler {
         sharedData.getGraph().findKCenters();
 
         for (Taxi taxi : sharedData.getTaxiList()) {
-            taxi.setPosition(sharedData.getGraph().getKCenters().get(Preamble.amountOfTaxis%taxi.getId()));
+            taxi.setPosition(sharedData.getGraph().getKCenters().get(taxi.getId() % sharedData.getGraph().getKCenters().size()));
             output.append("m ")
                     .append(taxi.getOutputId())
                     .append(" ")
