@@ -4,8 +4,8 @@ import java.util.stream.Collectors;
 
 public class Algorithm_LSD extends Algorithm {
 
-    private static final int RECURSE_MODIFIER = 11;
-    private static final int MAX_LOOKAHEAD = 8;
+    private static final int RECURSE_MODIFIER = 10;
+    private static final int MAX_LOOKAHEAD = 11;
     private static final int UPDATE_FREQUENCY = 1;
     private int lookaheadDist = 5;
     //The length of the path that the algo will consider ( min = 1 = only check neighbours).
@@ -28,6 +28,12 @@ public class Algorithm_LSD extends Algorithm {
         customerOutsideList = new ArrayList<>(sharedData.getCustomerOutsideList());
 
         int posLookahead = RECURSE_MODIFIER -(int)(Math.log(sharedData.getGraph().getSize())/Math.log(2));
+
+        if(sharedData.getGraph().getSize() < 300) {
+            if (Preamble.amountOfTaxis < 50) posLookahead += 2;
+            if (Preamble.amountOfTaxis < 10) posLookahead += 2;
+        }
+
         setLookaheadDist(lookaheadDist = Math.max(1,Math.min(MAX_LOOKAHEAD,posLookahead)));
         Main.debug("Chose lookahead distance of "+lookaheadDist);
         System.err.println("LSD using depth of "+lookaheadDist);

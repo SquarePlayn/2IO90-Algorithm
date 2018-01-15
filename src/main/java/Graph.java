@@ -143,9 +143,13 @@ public class Graph {
         //Bigger hub range for bigger graphs to save time
         //TODO Make more intuitive function here
         if(getSize() > 15000) {
-            HUB_RADIUS = 7;
+            HUB_RADIUS = 10;
         } else {
-            HUB_RADIUS = 4;
+            if(getSize() > 1200) {
+                HUB_RADIUS = 3;
+            } else {
+                HUB_RADIUS = 2;
+            }
         }
 
         //First make an array that will have the vertice IDs in random order
