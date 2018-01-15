@@ -94,7 +94,7 @@ public class Vertex {
     }
 
     public int getDistanceTo(Vertex vertex) {
-        if(!distanceTo.containsKey(vertex.getId())) {
+        if (!distanceTo.containsKey(vertex.getId())) {
             vertex.bfs(this, true);
         }
 
@@ -102,7 +102,7 @@ public class Vertex {
     }
 
     public Vertex getNextTowards(Vertex vertex) {
-        if(!nextTowards.containsKey(vertex.getId())) {
+        if (!nextTowards.containsKey(vertex.getId())) {
             vertex.bfs(this, true);
         }
         return nextTowards.get(vertex.getId());
@@ -127,13 +127,13 @@ public class Vertex {
     /**
      * Implementation of Breadth First Search
      * When ran, it sets in each vertice the minimal distance to the "start" node,
-     *  as well as the next node to go to when you want to get to this "start" node as quick as possible.
+     * as well as the next node to go to when you want to get to this "start" node as quick as possible.
      * Runs in an expanding fashion: First explore 1 layer, then another and so forth untill the entire
-     *  graph has been visited
+     * graph has been visited
      * Erases/overwrites any BSF results of earlier calls
      */
     private void bfs(Vertex searchFor, boolean stopIfDone) {
-        if(!bfsStarted) {
+        if (!bfsStarted) {
             //Make an empty queue and array to keep track of which vertices we have already visited.
             queue = new ArrayList<>();
 
@@ -149,14 +149,14 @@ public class Vertex {
         boolean foundDestination = false;
 
         //Now make sure we empty the whole queue, resulting on going over each vertice in the connected graph
-        while(!queue.isEmpty() && !(foundDestination && stopIfDone)) {
+        while (!queue.isEmpty() && !(foundDestination && stopIfDone)) {
             //Pop the item that is first up
             Vertex now = queue.remove(0);
 
 
             //For each connection:
-            for(Vertex towards: now.getNeigbours()) {
-                if(!towards.getVisited(this)) {
+            for (Vertex towards : now.getNeigbours()) {
+                if (!towards.getVisited(this)) {
                     //If we have not yet done anything with this node, we have not seen it before
                     //That means that we have now taken the shortest route to it. So the distance is 1 greater
                     // than the distance to the node we are considering, and the shortest path back is trough the node
@@ -164,10 +164,10 @@ public class Vertex {
                     //Also add it to the (end of the) queue to traverse further
                     towards.setVisited(this, true);
                     queue.add(towards);
-                    towards.updateDistanceInfo(this, now.getDistanceTo(this)+1, now);
-                    this.setDistanceTo(towards, now.getDistanceTo(this)+1);
+                    towards.updateDistanceInfo(this, now.getDistanceTo(this) + 1, now);
+                    this.setDistanceTo(towards, now.getDistanceTo(this) + 1);
 
-                    if(towards.equals(searchFor)) {
+                    if (towards.equals(searchFor)) {
                         foundDestination = true;
                     }
                 }
@@ -201,7 +201,7 @@ public class Vertex {
     }
 
     public boolean removeTaxi(Taxi taxi) {
-        return  getTaxis().remove(taxi);
+        return getTaxis().remove(taxi);
     }
 
     public int getHubID() {
@@ -286,13 +286,13 @@ public class Vertex {
 
     public void setKCenter(boolean kCenter) {
         isKCenter = kCenter;
-        if(kCenter) {
+        if (kCenter) {
             this.kCenterVisited = Integer.MAX_VALUE;
         }
     }
 
     public void increaseKCenterVisited() {
-        kCenterVisited ++;
+        kCenterVisited++;
     }
 
     public void setKCenterVisited(int visited) {
@@ -312,12 +312,12 @@ public class Vertex {
     }
 
     public boolean isClusterOrigin() {
-        return  isClusterOrigin;
+        return isClusterOrigin;
     }
 
     public void setClusterOrigin(boolean clusterOrigin) {
         isClusterOrigin = clusterOrigin;
-        if(clusterOrigin) {
+        if (clusterOrigin) {
             this.kCenterVisited = Integer.MAX_VALUE;
         }
     }

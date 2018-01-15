@@ -91,8 +91,6 @@ public class Scheduler {
 
         sharedData.getGraph().buildHubs(sharedData.getRandom());
 
-        sharedData.getGraph().findKCenters();
-
         //While there are lines to read, read them and advance to next minute
         while (scanner.hasNextLine()) {
             readInput();
@@ -125,7 +123,7 @@ public class Scheduler {
             }
         }
 
-        activeAlgorithm = AlgorithmType.HUNGARIAN;
+        activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
 
         if(!activeAlgorithm.getAlgorithm().isInitialized()){
             activeAlgorithm.getAlgorithm().initialize(sharedData);
@@ -161,8 +159,12 @@ public class Scheduler {
 
         if(activeAlgorithm == AlgorithmType.HUBS) {
             output = initializeTaxis_hubs();
+        } else if(activeAlgorithm == AlgorithmType.SIMPLEQUEUE) {
+            output = initializeTaxis_graphCenter();
         } else {
-            output = initializeTaxis_kcenter();
+            //TODO: replace in final version
+            /*output = initializeTaxis_kcenter();*/
+            output = initializeTaxis_graphCenter();
         }
 
         output += "c";
@@ -177,12 +179,29 @@ public class Scheduler {
      */
 
     private String initializeTaxis_kcenter() {
-        Main.debug("Using the random() type of taxi distribution");
+        Main.debug("Using the kcenter() type of taxi distribution");
         StringBuilder output = new StringBuilder();
         sharedData.getGraph().findKCenters();
 
         for (Taxi taxi : sharedData.getTaxiList()) {
-            taxi.setPosition(sharedData.getGraph().getKCenters().get(taxi.getId()));
+            taxi.setPosition(sharedData.getGraph().getKCenters().get(Preamble.amountOfTaxis%taxi.getId()));
+            output.append("m ")
+                    .append(taxi.getOutputId())
+                    .append(" ")
+                    .append(taxi.getPosition().getId())
+                    .append(" ");
+        }
+
+        return output.toString();
+    }
+
+    private String initializeTaxis_graphCenter() {
+        Main.debug("Using the graphCenter() type of taxi distribution");
+        StringBuilder output = new StringBuilder();
+        sharedData.getGraph().findGraphCenter();
+
+        for (Taxi taxi : sharedData.getTaxiList()) {
+            taxi.setPosition(sharedData.getGraph().getGraphCenter());
             output.append("m ")
                     .append(taxi.getOutputId())
                     .append(" ")

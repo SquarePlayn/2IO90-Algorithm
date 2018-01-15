@@ -16,10 +16,12 @@ public class Graph {
     //ArrayList of all vertices that are a K-center
     private ArrayList<Vertex> kCenters;
     private ArrayList<Vertex> clusterOrigins;
+    private Vertex graphCenter;
 
 
     public static long findCenters = 0;
     public static long findClusters = 0;
+    public static long findGraphCenter = 0;
 
 
     Graph() {
@@ -219,32 +221,32 @@ public class Graph {
             return;
         }
 
-        //Figure out if the calls are roughly uniformly distributed or not (using standard deviation of #calls per vertex)
-        double avgAmountOfTrainingCalls = 0;
-        boolean uniformCallDistribution = true;
-        for(Vertex v : vertices) {
-            avgAmountOfTrainingCalls += v.getAmountOfTrainingCalls();
-        }
-        avgAmountOfTrainingCalls /= getSize();
-        double stdDevOfTrainingCalls = 0;
-        for(Vertex v : vertices)
-            stdDevOfTrainingCalls += (v.getAmountOfTrainingCalls()-avgAmountOfTrainingCalls)*
-                    (v.getAmountOfTrainingCalls()-avgAmountOfTrainingCalls);
-        stdDevOfTrainingCalls = Math.sqrt(stdDevOfTrainingCalls/(getSize()-1));
-        if(stdDevOfTrainingCalls > 1) {
-            uniformCallDistribution = false;
-        }
-
         //Find the cluster origins
         ArrayList<Vertex> queue = new ArrayList<>();
         if(Preamble.amountOfTaxis < getSize()/3) { //Use greedy approximation for few taxis
             System.out.println("Strategy A");
+            //Figure out if the calls are roughly uniformly distributed or not (using standard deviation of #calls per vertex)
+            double avgAmountOfTrainingCalls = 0;
+            boolean uniformCallDistribution = true;
+            for(Vertex v : vertices) {
+                avgAmountOfTrainingCalls += v.getAmountOfTrainingCalls();
+            }
+            avgAmountOfTrainingCalls /= getSize();
+            double stdDevOfTrainingCalls = 0;
+            for(Vertex v : vertices)
+                stdDevOfTrainingCalls += (v.getAmountOfTrainingCalls()-avgAmountOfTrainingCalls)*
+                        (v.getAmountOfTrainingCalls()-avgAmountOfTrainingCalls);
+            stdDevOfTrainingCalls = Math.sqrt(stdDevOfTrainingCalls/(getSize()-1));
+            if(stdDevOfTrainingCalls > 1) {
+                uniformCallDistribution = false;
+            }
 
-            if(uniformCallDistribution) {
+            if(uniformCallDistribution) { //If the calls are (roughly) uniformly distributed...
+                System.out.println("uniform");
                 //Make vertex 0 the first cluster origin
                 makeClusterOrigin(getVertex(0));
-                System.out.println("uniform");
-            }else {
+            }else { //If there appears to be some pattern in the calls, not occurring by chance...
+                System.out.println("not uniform");
                 //Sort vertices by decreasing amount of training calls
                 ArrayList<Vertex> verticesByTrainingCalls = new ArrayList<>();
                 verticesByTrainingCalls.addAll(vertices);
@@ -255,7 +257,6 @@ public class Graph {
                 for(int i=0; i<Preamble.amountOfTaxis/3; i++) {
                     makeClusterOrigin(verticesByTrainingCalls.get(i));
                 }
-                System.out.println("not uniform");
             }
             //Find the other origins by consecutively finding which vertex is furthest away from any already chosen origin
             while (clusterOrigins.size() < Preamble.amountOfTaxis) {
@@ -352,7 +353,6 @@ public class Graph {
                 for(Vertex neighbor : v.getNeigbours()) {
                     if(neighbor.getClusterID() == v.getClusterID() && neighbor.getkCenterVisited() != 0) {
                         queue.add(neighbor);
-                        neighbor.setClusterID(v.getClusterID());
                         neighbor.setKCenterVisited(0);
                     }
                 }
@@ -388,7 +388,7 @@ public class Graph {
             longestPath.add(longestPathStart);
             while(!queue.isEmpty()) {
                 Vertex v = queue.remove(0);
-                if(v.getNextVertexInLongestPath() != null) {
+                if(v != longestPathEnd) {
                     queue.add(v.getNextVertexInLongestPath());
                     longestPath.add(v.getNextVertexInLongestPath());
                 }
@@ -425,6 +425,65 @@ public class Graph {
 
     }
 
+    public void findGraphCenter() {
+        long start3 = System.nanoTime();
+        //Find furthest vertex from node 0
+        Vertex furthestA = null;
+        Vertex furthestB = null;
+
+        ArrayList<Vertex> queue = new ArrayList<>();
+        queue.add(getVertex(0));
+        getVertex(0).increaseKCenterVisited();
+        while(!queue.isEmpty()) {
+            Vertex v = queue.remove(0);
+            for(Vertex neighbor : v.getNeigbours()) {
+                if(v.getkCenterVisited() > neighbor.getkCenterVisited()) {
+                    queue.add(neighbor);
+                    neighbor.increaseKCenterVisited();
+                }
+            }
+
+            if(queue.isEmpty()) {
+                furthestA = v;
+            }
+        }
+
+        //Find the furthest away vertex from there
+        queue = new ArrayList<>();
+        queue.add(furthestA);
+        furthestA.increaseKCenterVisited();
+        while(!queue.isEmpty()) {
+            Vertex v = queue.remove(0);
+            for(Vertex neighbor : v.getNeigbours()) {
+                if(v.getkCenterVisited() > neighbor.getkCenterVisited()) {
+                    queue.add(neighbor);
+                    neighbor.setNextVertexInLongestPath(v);
+                    neighbor.increaseKCenterVisited();
+                }
+            }
+
+            if(queue.isEmpty()) {
+                furthestB = v;
+            }
+        }
+
+        //Retrieve path between these most remote vertices
+        ArrayList<Vertex> longestPath = new ArrayList<>();
+        queue = new ArrayList<>();
+        queue.add(furthestB);
+        longestPath.add(furthestB);
+        while(!queue.isEmpty()) {
+            Vertex v = queue.remove(0);
+            if(v != furthestA) {
+                queue.add(v.getNextVertexInLongestPath());
+                longestPath.add(v.getNextVertexInLongestPath());
+            }
+        }
+        //Set the midway point in this path as the graph center
+        graphCenter =  longestPath.get(longestPath.size()/2);
+        findGraphCenter += System.nanoTime() - start3;
+    }
+
     public void makeKCenter(Vertex v) {
         kCenters.add(v);
         v.setKCenter(true);
@@ -441,5 +500,21 @@ public class Graph {
 
     public ArrayList<Vertex> getClusterOrigins() {
         return clusterOrigins;
+    }
+
+    public Vertex getClosestKCenter(Vertex from) {
+        if(from.isKCenter()) {
+            return from;
+        }
+        for (Vertex center : kCenters) {
+            if(from.getClusterID() == center.getClusterID()) {
+                return center;
+            }
+        }
+        return null;
+    }
+
+    public Vertex getGraphCenter() {
+        return graphCenter;
     }
 }

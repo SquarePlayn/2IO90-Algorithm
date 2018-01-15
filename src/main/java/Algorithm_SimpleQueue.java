@@ -6,6 +6,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
     private ArrayList<Customer> customerQueue;
     private ArrayList<Taxi> taxiReadyQueue;
     private ArrayList<Taxi> taxiInOperationList;
+    private ArrayList<Taxi> taxiTowardsCenterList;
 
     @Override
     public void readMinute(ArrayList<Call> calls) {
@@ -20,6 +21,7 @@ public class Algorithm_SimpleQueue extends Algorithm {
         customerQueue = new ArrayList<>();
         taxiReadyQueue = new ArrayList<>();
         taxiInOperationList = new ArrayList<>();
+        taxiTowardsCenterList = new ArrayList<>();
 
         taxiReadyQueue.addAll(sharedData.getTaxiList()); // Initially all taxis are unoccupied, so add them all to the ready queue.
 
@@ -35,10 +37,16 @@ public class Algorithm_SimpleQueue extends Algorithm {
             customer.setBeingHandled(false);
         }
 
-        while (!customerQueue.isEmpty() && !taxiReadyQueue.isEmpty()) {
+        while (!customerQueue.isEmpty() && (!taxiReadyQueue.isEmpty() || !taxiTowardsCenterList.isEmpty())) {
             // Get the first-up taxi, pop it from the queue and add it to the ones in operation
 
-            Taxi taxi = taxiReadyQueue.remove(0);
+            Taxi taxi = null;
+            if (!taxiReadyQueue.isEmpty()) {
+                taxi = taxiReadyQueue.remove(0);
+            } else {
+                taxi = taxiTowardsCenterList.remove(0);
+                taxi.setTowardsCenter(false);
+            }
             taxiInOperationList.add(taxi);
 
             // Pop the customer that is first-up
@@ -51,9 +59,17 @@ public class Algorithm_SimpleQueue extends Algorithm {
             taxi.setInOperation(true);
         }
 
-
         // Advance all taxis that have an operation
         ArrayList<Move> output = new ArrayList<>();
+        for (int i=0; i<taxiTowardsCenterList.size(); i++) {
+            Taxi taxi = taxiTowardsCenterList.get(i);
+            output.addAll(advanceTaxi(taxi));
+            if(!taxi.getTowardsCenter()) {
+                taxiTowardsCenterList.remove(taxi);
+                taxiReadyQueue.add(taxi);
+                i--;
+            }
+        }
         for (int i=0; i<taxiInOperationList.size(); i++) {
             Taxi taxi = taxiInOperationList.get(i);
             output.addAll(advanceTaxi(taxi));
@@ -68,6 +84,18 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
         //Make sure the info stays updated before we go back
         processMoves(output);
+
+        for(int i=0; i<taxiReadyQueue.size(); i++) {
+            Taxi taxi = taxiReadyQueue.get(i);
+            if (taxi.getPosition() != sharedData.getGraph().getGraphCenter() && customerQueue.isEmpty()) {
+                taxiTowardsCenterList.add(taxi);
+                taxiReadyQueue.remove(taxi);
+                i--;
+                taxi.setPath(sharedData.getGraph().getShortestPath(
+                        taxi.getPosition(), sharedData.getGraph().getGraphCenter()));
+                taxi.setTowardsCenter(true);
+            }
+        }
 
         return output;
     }
@@ -112,6 +140,14 @@ public class Algorithm_SimpleQueue extends Algorithm {
             }
         }
 
+        if(taxi.getTowardsCenter()) {
+            output.add(new Move(taxi, taxi.getPath().remove(0)));
+
+            if(taxi.getPath().isEmpty()) {
+                taxi.setTowardsCenter(false);
+            }
+        }
+
         return output;
 
     }
@@ -129,7 +165,6 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
             } else if(action == 'p') {
                 Customer customer = move.getCustomer();
-
                 //Picking up a passenger
                 taxi.pickup(customer, sharedData);
 
