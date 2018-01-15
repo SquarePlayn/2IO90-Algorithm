@@ -1,3 +1,6 @@
+import com.sun.org.apache.xpath.internal.SourceTree;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -57,9 +60,15 @@ public class Scheduler {
         initializeTaxis(); //TODO Might consider doing a simpler taxi initializer such as always random at this position
         for (int i = 1; i < Preamble.testMinutes; i++) {
             Main.debug("Starting testMinute "+i);
-            String input = scanner.nextLine();
-            testCalls += Integer.parseInt(input.split(" ")[0]);
 
+            //Store in each vertex, how many calls are coming in from there
+            String inputString = scanner.nextLine();
+            String[] input = inputString.split(" ");
+            int amountOfCalls = Integer.parseInt(input[0]);
+            for (int j = 0; j < amountOfCalls; j++) {
+                Vertex position = sharedData.getGraph().getVertex(Integer.parseInt(input[j * 2 + 1]));
+                position.increaseAmountOfTrainingCalls();
+            }
             scanner.println("c");
         }
         scanner.nextLine();
@@ -71,9 +80,14 @@ public class Scheduler {
      */
     public void realMinutes() {
         //From here on, the Actual calling and being called of taxis starts
+
         initializeTaxis();
 
         startSchedule();
+
+        initializeTaxis();
+
+        sharedData.getGraph().buildHubs(sharedData.getRandom());
 
         //While there are lines to read, read them and advance to next minute
         while (scanner.hasNextLine()) {
@@ -246,7 +260,6 @@ public class Scheduler {
 
         System.err.println("Switching to algorithm: " + activeAlgorithm.toString());
 
-
         if(!activeAlgorithm.getAlgorithm().isInitialized()){
             activeAlgorithm.getAlgorithm().initialize(sharedData);
         }
@@ -280,10 +293,14 @@ public class Scheduler {
 
         String output;
 
-        if(Preamble.amountOfTaxis > sharedData.getGraph().getSize()/2) {
-            output = initializeTaxis_random();
-        } else {
+        if(activeAlgorithm == AlgorithmType.HUBS) {
             output = initializeTaxis_hubs();
+        } else if(activeAlgorithm == AlgorithmType.SIMPLEQUEUE) {
+            output = initializeTaxis_graphCenter();
+        } else {
+            //TODO: replace in final version
+            /*output = initializeTaxis_kcenter();*/
+            output = initializeTaxis_graphCenter();
         }
 
         output += "c";
@@ -296,13 +313,31 @@ public class Scheduler {
      * Initializes each taxi to a random position and prints that to the output
      * Only run when you need to output the first (init) line of output
      */
-    private String initializeTaxis_random() {
-        Main.debug("Using the random() type of taxi distribution");
+
+    private String initializeTaxis_kcenter() {
+        Main.debug("Using the kcenter() type of taxi distribution");
         StringBuilder output = new StringBuilder();
-        Random random = sharedData.getRandom();
+        sharedData.getGraph().findKCenters();
 
         for (Taxi taxi : sharedData.getTaxiList()) {
-            taxi.setPosition(sharedData.getGraph().getVertex(random.nextInt(sharedData.getGraph().getSize())));
+            taxi.setPosition(sharedData.getGraph().getKCenters().get(Preamble.amountOfTaxis%taxi.getId()));
+            output.append("m ")
+                    .append(taxi.getOutputId())
+                    .append(" ")
+                    .append(taxi.getPosition().getId())
+                    .append(" ");
+        }
+
+        return output.toString();
+    }
+
+    private String initializeTaxis_graphCenter() {
+        Main.debug("Using the graphCenter() type of taxi distribution");
+        StringBuilder output = new StringBuilder();
+        sharedData.getGraph().findGraphCenter();
+
+        for (Taxi taxi : sharedData.getTaxiList()) {
+            taxi.setPosition(sharedData.getGraph().getGraphCenter());
             output.append("m ")
                     .append(taxi.getOutputId())
                     .append(" ")

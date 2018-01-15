@@ -24,12 +24,28 @@ public class Algorithm_Hungarian extends Algorithm {
 
     }
 
+    public static long time_process_minute = 0;
+    public static long time_match_entities = 0;
+    public static long time_apply_hungarian = 0;
+
+    public static long time_new_ha_class_instance = 0;
+    public static long time_execute_hungarian = 0;
+
+    public static long time_reduce = 0;
+    public static long time_compute_initial = 0;
+    public static long time_greedy_match = 0;
+    public static long time_rest_of_loop = 0;
+
     @Override
     public ArrayList<Move> processMinute(boolean callsLeft) {
+
+        long start = System.nanoTime();
+
         ArrayList<Move> output = new ArrayList<>();
 
         // First check whether a taxi has already arrived at the destination of the customer it wants to pick up.
         // If that is the case it should be removed from the queue, so it won't get used by the Hungarian algo.
+
         for(Taxi taxi : taxiInOperationList) {
             if(taxi.getInOperation()
                     && taxi.getPosition().equals(taxi.getCustomer().getPosition())
@@ -43,8 +59,13 @@ public class Algorithm_Hungarian extends Algorithm {
             }
         }
 
+        long start2 = System.nanoTime();
+
         if(!customerQueue.isEmpty() && !taxiReadyQueue.isEmpty()) {
+            long start3 = System.nanoTime();
             HashMap<Taxi, Customer> hungOut = applyHungarian();
+
+            this.time_apply_hungarian += System.nanoTime() - start3;
 
             // Bind all customers to taxis returned by the Hungarian Algorithm.
             for(Map.Entry<Taxi, Customer> entry : hungOut.entrySet()) {
@@ -58,6 +79,8 @@ public class Algorithm_Hungarian extends Algorithm {
                 taxi.setInOperation(true);
             }
         }
+
+        this.time_match_entities += System.nanoTime() - start2;
 
         // Advance all taxis that have an operation
         Iterator<Taxi> it = taxiInOperationList.iterator();
@@ -78,6 +101,8 @@ public class Algorithm_Hungarian extends Algorithm {
 
         //Make sure the info stays updated before we go back
         processMoves(output);
+
+        this.time_process_minute += System.nanoTime() - start;
 
         return output;
     }
@@ -113,9 +138,16 @@ public class Algorithm_Hungarian extends Algorithm {
             }
         }
 
+
+
         // Execute the Hungarian Algorithm.
+        long start6 = System.nanoTime();
         HungarianAlgorithm ha = new HungarianAlgorithm(costMatrix);
+        this.time_new_ha_class_instance += System.nanoTime() - start6;
+
+        long start5 = System.nanoTime();
         int[] result = ha.execute();
+        this.time_execute_hungarian += System.nanoTime() - start5;
 
         // Analyse the result and populate the resulting HashMap.
         for(int t = 0; t < result.length; t++) {
@@ -333,9 +365,19 @@ public class Algorithm_Hungarian extends Algorithm {
              * smallest element, compute an initial non-zero dual feasible solution and
              * create a greedy matching from workers to jobs of the cost matrix.
              */
+            long startA = System.nanoTime();
             reduce();
+            Algorithm_Hungarian.time_reduce += System.nanoTime() - startA;
+
+            long startB = System.nanoTime();
             computeInitialFeasibleSolution();
+            Algorithm_Hungarian.time_compute_initial += System.nanoTime() - startB;
+
+            long startC = System.nanoTime();
             greedyMatch();
+            Algorithm_Hungarian.time_greedy_match += System.nanoTime() - startC;
+
+            long startD = System.nanoTime();
 
             int w = fetchUnmatchedWorker();
             while (w < dim) {
@@ -349,6 +391,8 @@ public class Algorithm_Hungarian extends Algorithm {
                     result[w] = -1;
                 }
             }
+
+            Algorithm_Hungarian.time_rest_of_loop += System.nanoTime() - startD;
             return result;
         }
 
