@@ -1,12 +1,8 @@
-import com.sun.org.apache.xpath.internal.SourceTree;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Random;
 
 public class Scheduler {
-    private static final int SCHEDULE_CUTOFF = 1199;
+    private static final int SCHEDULE_CUTOFF = 1299;
     private static final int HUNGARIAN_MINSIZE = 100;
     private static final int HUBS_CUTOFF = 3000;
     private static final long LSD_UPPERTIME = 9000000000L;
@@ -70,6 +66,7 @@ public class Scheduler {
                 position.increaseAmountOfTrainingCalls();
             }
             scanner.println("c");
+            testCalls += amountOfCalls;
         }
         scanner.nextLine();
     }
@@ -89,7 +86,7 @@ public class Scheduler {
 
         //While there are lines to read, read them and advance to next minute
         while (scanner.hasNextLine()) {
-            //checkRescheduleTime(true);
+            checkRescheduleTime(true);
             readInput();
             advanceMinute(true);
             outputMinute(currentMinute);
@@ -97,11 +94,11 @@ public class Scheduler {
 
         Main.debug("No more call minutes to be read, time to complete delivering everyone");
 
-        //reschedule(RescheduleType.END_OF_CALL_LIST);
+        reschedule(RescheduleType.END_OF_CALL_LIST);
 
         //Since there are no more lines to read, advance until all customers are delivered
         while (!sharedData.getCustomerList().isEmpty()) {
-            //checkRescheduleTime(false);
+            checkRescheduleTime(false);
             advanceMinute(false);
             outputMinute(currentMinute);
         }
@@ -182,12 +179,12 @@ public class Scheduler {
             }
         } else {
             if ((Taxi.MAX_CAPACITY <= 1 || (sharedData.getTaxiList().size() * 5 > sharedData.getGraph().getSize() && sharedData.getGraph().getSize() > HUNGARIAN_MINSIZE && sharedData.getGraph().getSize() * 4 < expectedCalls))) {
-                activeAlgorithm = AlgorithmType.HUNGARIAN;
+                activeAlgorithm=AlgorithmType.HUNGARIAN;
             } else {
                 activeAlgorithm = AlgorithmType.LSD;
             }
         }
-        activeAlgorithm=AlgorithmType.SIMPLEHUNGARIAN;
+
         activeAlgorithm.getAlgorithm().initialize(sharedData);
 
         if(activeAlgorithm == AlgorithmType.LSD && sharedData.getGraph().getSize() < 200) {

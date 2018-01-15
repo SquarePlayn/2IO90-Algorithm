@@ -107,6 +107,8 @@ public class Algorithm_LSD extends Algorithm {
                if (better) {
                    bestScore = option.getScore();
                    bestOption = option;
+               } else {
+                   path = new ArrayList<>();
                }
            }
 
