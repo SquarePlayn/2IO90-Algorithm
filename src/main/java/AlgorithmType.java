@@ -23,7 +23,14 @@ public enum AlgorithmType {
 
     HUBS() {
         @Override
-        public void reset() { this.algorithm = new Algorithm_Hubs(); }
+        public void reset() {this.algorithm = new Algorithm_Hubs(); }
+    },
+
+    SIMPLEHUNGARIAN(){
+        @Override
+        public void reset() {
+            this.algorithm = new Algorithm_SimpleHungarian();
+        }
     };
 
     protected Algorithm algorithm;
