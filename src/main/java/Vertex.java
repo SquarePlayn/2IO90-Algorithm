@@ -26,6 +26,8 @@ public class Vertex {
     private HashSet<Vertex> adjacentHubs;
     private HashMap<Integer, Integer> distanceToHubCenter;
     private HashMap<Integer, ArrayList<Vertex>> pathToHubCenter;
+    private HashSet<Customer> inAreaCustomers; //The customers in the hub region, but not on the hub itself
+    private HashMap<Integer, Vertex> nextHubTowardsHub;
 
     //K-Center variables
     private boolean isKCenter;
@@ -36,9 +38,8 @@ public class Vertex {
     private int amountOfTrainingCalls;
 
     //BFS Improvements
-    boolean bfsStarted = false;
-    ArrayList<Vertex> queue;
-
+    private boolean bfsStarted = false;
+    private ArrayList<Vertex> queue;
 
     public Vertex(int id) {
         this.id = id;
@@ -78,6 +79,8 @@ public class Vertex {
         setDistanceToHubCenter(this, 0);
         pathToHubCenter = new HashMap<>();
         setPathToHubCenter(this, new ArrayList<>());
+        inAreaCustomers = new HashSet<>();
+        nextHubTowardsHub = new HashMap<>();
     }
 
     public void updateDistanceInfo(Vertex startedPoint, int distance, Vertex nextTowards) {
@@ -241,7 +244,7 @@ public class Vertex {
     }
 
     public int getDistanceToHubCenter(Vertex hub) {
-        return distanceToHubCenter.get(hub.getHubID());
+        return distanceToHubCenter.getOrDefault(hub.getHubID(), Integer.MAX_VALUE);
     }
 
     public void setDistanceToHubCenter(Vertex hub, int dist) {
@@ -249,7 +252,7 @@ public class Vertex {
     }
 
     public ArrayList<Vertex> getPathToHubCenter(Vertex hub) {
-        return pathToHubCenter.get(hub.getHubID());
+        return pathToHubCenter.getOrDefault(hub.getHubID(), null);
     }
 
     public void setPathToHubCenter(Vertex hub, ArrayList<Vertex> pathToHubCenter) {
@@ -336,5 +339,13 @@ public class Vertex {
 
     public void increaseAmountOfTrainingCalls() {
         amountOfTrainingCalls++;
+    }
+  
+    public Vertex getNextHubTowardsHub(Vertex goal) {
+        return nextHubTowardsHub.get(goal.getHubID());
+    }
+
+    public void setNextHubTowardsHub(Vertex goal, Vertex hubTowards) {
+        nextHubTowardsHub.put(goal.getHubID(), hubTowards);
     }
 }

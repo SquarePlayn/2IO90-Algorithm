@@ -12,6 +12,7 @@ public class SharedData {
     private HashSet<Customer> customerInTaxiList;
     private IOHistory iOHistory;
     private Graph graph;
+    private int customerCallAmount;
 
     public SharedData(Graph graph) {
         this.graph = graph;
@@ -21,6 +22,7 @@ public class SharedData {
         this.customerOutsideList = new HashSet<>();
         this.customerInTaxiList = new HashSet<>();
         this.iOHistory = new IOHistory();
+        this.customerCallAmount = 0;
     }
 
     public Random getRandom() {
@@ -50,4 +52,13 @@ public class SharedData {
     public IOHistory getIOHistory() {
         return iOHistory;
     }
+
+    public void addCustomerCallAmount(int calls) {
+        this.customerCallAmount += calls;
+    }
+
+    public int getCustomerCallAmount() {
+        return customerCallAmount;
+    }
+
 }
