@@ -1,3 +1,6 @@
+import com.sun.org.apache.xpath.internal.SourceTree;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -57,9 +60,15 @@ public class Scheduler {
         initializeTaxis(); //TODO Might consider doing a simpler taxi initializer such as always random at this position
         for (int i = 1; i < Preamble.testMinutes; i++) {
             Main.debug("Starting testMinute "+i);
-            String input = scanner.nextLine();
-            testCalls += Integer.parseInt(input.split(" ")[0]);
 
+            //Store in each vertex, how many calls are coming in from there
+            String inputString = scanner.nextLine();
+            String[] input = inputString.split(" ");
+            int amountOfCalls = Integer.parseInt(input[0]);
+            for (int j = 0; j < amountOfCalls; j++) {
+                Vertex position = sharedData.getGraph().getVertex(Integer.parseInt(input[j * 2 + 1]));
+                position.increaseAmountOfTrainingCalls();
+            }
             scanner.println("c");
         }
         scanner.nextLine();
@@ -71,9 +80,12 @@ public class Scheduler {
      */
     public void realMinutes() {
         //From here on, the Actual calling and being called of taxis starts
+
         initializeTaxis();
 
         startSchedule();
+
+        sharedData.getGraph().buildHubs(sharedData.getRandom());
 
         //While there are lines to read, read them and advance to next minute
         while (scanner.hasNextLine()) {
@@ -109,7 +121,6 @@ public class Scheduler {
             return;
         }
 
-
         // DiffTIme > 25s
         if (difTime > 25000000000L && Taxi.MAX_CAPACITY > 1) {
 
@@ -125,7 +136,7 @@ public class Scheduler {
             if(difTime < LSD_UPPERTIME) {
                 int amount = 1;
                 if(difTime * 3 < LSD_UPPERTIME) {
-                    amount++;
+                    amount += 5;
                 }
                 activeAlgorithm.getAlgorithm().upscale(amount);
                 System.err.println("Increased LSD Search depth by "+amount+" because halfway done and time left");
@@ -133,11 +144,11 @@ public class Scheduler {
             }
         }
 
-        if(!callsLeft && currentMinute > sharedData.getCustomerCallAmount() + 20 && !hasUpscaledLSD && delivered > 0 && difTime * sharedData.getCustomerCallAmount() / delivered < LSD_UPPERTIME) {
+        if(!callsLeft && currentMinute > Preamble.callMinutes + 20 && !hasUpscaledLSD && delivered > 0 && difTime * sharedData.getCustomerCallAmount() / delivered < LSD_UPPERTIME && activeAlgorithm != AlgorithmType.HUNGARIAN) {
 
             if (activeAlgorithm == AlgorithmType.LSD ) {
                 long exp = difTime * sharedData.getCustomerCallAmount() / delivered;
-                int amount = exp * 5 < LSD_UPPERTIME ? 1 : 2;
+                int amount = exp * 6 < LSD_UPPERTIME ? 2 : 4;
                 activeAlgorithm.getAlgorithm().upscale(amount);
                 System.err.println("Increasing LSD Search depth by "+amount);
             } else {
@@ -153,7 +164,6 @@ public class Scheduler {
      */
     private void startSchedule() {
 
-
         //if(sharedData.getGraph().getSize() > SCHEDULE_CUTOFF) {
         int expectedCalls = sharedData.getGraph().getSize(); // If no testminutes, go off of graph size
         if(Preamble.testMinutes > 1) {
@@ -164,14 +174,14 @@ public class Scheduler {
             expectedCalls *= 0.624;
         }
 
-        if(expectedCalls > SCHEDULE_CUTOFF && sharedData.getGraph().getSize() > 50 || sharedData.getGraph().getSize() > 4000) {
+        if((sharedData.getGraph().getSize() > 1000 && sharedData.getTaxiList().size() > sharedData.getGraph().getSize()) || (expectedCalls > SCHEDULE_CUTOFF && sharedData.getGraph().getSize() > 50 && sharedData.getGraph().getSize() * 4 > expectedCalls || sharedData.getGraph().getSize() > 4000)) {
             if(sharedData.getGraph().getSize() > HUBS_CUTOFF) {
                 activeAlgorithm = AlgorithmType.HUBS;
             } else {
                 activeAlgorithm = AlgorithmType.SIMPLEQUEUE;
             }
         } else {
-            if (Taxi.MAX_CAPACITY <= 1 && sharedData.getGraph().getSize() > HUNGARIAN_MINSIZE) {
+            if ((Taxi.MAX_CAPACITY <= 1 || (sharedData.getTaxiList().size() * 5 > sharedData.getGraph().getSize() && sharedData.getGraph().getSize() > HUNGARIAN_MINSIZE && sharedData.getGraph().getSize() * 4 < expectedCalls))) {
                 activeAlgorithm = AlgorithmType.HUNGARIAN;
             } else {
                 activeAlgorithm = AlgorithmType.LSD;
@@ -234,8 +244,8 @@ public class Scheduler {
                         return;
                     }
 
-                } else {
-                    return;
+                } else if(activeAlgorithm != AlgorithmType.LSD && 30000000000L - difTime > 3 * timeNeededToFinish) {
+                    activeAlgorithm = AlgorithmType.LSD;
                 }
 
                 break;
@@ -247,7 +257,6 @@ public class Scheduler {
         // TODO on switching algo make sure to update lastUpdatedVariables.
 
         System.err.println("Switching to algorithm: " + activeAlgorithm.toString());
-
 
         if(!activeAlgorithm.getAlgorithm().isInitialized()){
             activeAlgorithm.getAlgorithm().initialize(sharedData);
@@ -282,10 +291,14 @@ public class Scheduler {
 
         String output;
 
-        if(Preamble.amountOfTaxis > sharedData.getGraph().getSize()/2) {
-            output = initializeTaxis_random();
-        } else {
+        if(activeAlgorithm == AlgorithmType.HUBS) {
             output = initializeTaxis_hubs();
+        } else if(activeAlgorithm == AlgorithmType.SIMPLEQUEUE) {
+            output = initializeTaxis_graphCenter();
+        } else {
+            //TODO: replace in final version
+            output = initializeTaxis_kcenter();
+            //output = initializeTaxis_graphCenter();
         }
 
         output += "c";
@@ -298,13 +311,31 @@ public class Scheduler {
      * Initializes each taxi to a random position and prints that to the output
      * Only run when you need to output the first (init) line of output
      */
-    private String initializeTaxis_random() {
-        Main.debug("Using the random() type of taxi distribution");
+
+    private String initializeTaxis_kcenter() {
+        Main.debug("Using the kcenter() type of taxi distribution");
         StringBuilder output = new StringBuilder();
-        Random random = sharedData.getRandom();
+        sharedData.getGraph().findKCenters();
 
         for (Taxi taxi : sharedData.getTaxiList()) {
-            taxi.setPosition(sharedData.getGraph().getVertex(random.nextInt(sharedData.getGraph().getSize())));
+            taxi.setPosition(sharedData.getGraph().getKCenters().get(taxi.getId() % sharedData.getGraph().getKCenters().size()));
+            output.append("m ")
+                    .append(taxi.getOutputId())
+                    .append(" ")
+                    .append(taxi.getPosition().getId())
+                    .append(" ");
+        }
+
+        return output.toString();
+    }
+
+    private String initializeTaxis_graphCenter() {
+        Main.debug("Using the graphCenter() type of taxi distribution");
+        StringBuilder output = new StringBuilder();
+        sharedData.getGraph().findGraphCenter();
+
+        for (Taxi taxi : sharedData.getTaxiList()) {
+            taxi.setPosition(sharedData.getGraph().getGraphCenter());
             output.append("m ")
                     .append(taxi.getOutputId())
                     .append(" ")

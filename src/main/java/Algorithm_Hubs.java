@@ -49,7 +49,6 @@ public class Algorithm_Hubs extends Algorithm {
         ArrayList<Move> moves = new ArrayList<>();
 
         if(dropEveryone) {
-            ArrayList<Customer> droppers = new ArrayList<>();
             for(Taxi taxi : sharedData.getTaxiList()) {
                 for(Customer customer : taxi.getPassengers()) {
                     moves.add(new Move('d', taxi, customer) );

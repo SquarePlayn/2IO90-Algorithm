@@ -77,7 +77,6 @@ public class Algorithm_SimpleQueue extends Algorithm {
             taxi.setInOperation(true);
         }
 
-
         // Advance all taxis that have an operation
         for (int i=0; i<taxiInOperationList.size(); i++) {
             Taxi taxi = taxiInOperationList.get(i);
@@ -170,7 +169,6 @@ public class Algorithm_SimpleQueue extends Algorithm {
 
             } else if(action == 'p') {
                 Customer customer = move.getCustomer();
-
                 //Picking up a passenger
                 taxi.pickup(customer, sharedData);
 

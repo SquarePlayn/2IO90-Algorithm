@@ -31,9 +31,7 @@ public enum AlgorithmType {
         public void reset() {
             this.algorithm = new Algorithm_SimpleHungarian();
         }
-    },
-
-    ;
+    };
 
     protected Algorithm algorithm;
 
