@@ -374,9 +374,15 @@ public class Algorithm_LSD extends Algorithm {
         for(int dist = startPos+1; dist < path.size(); dist++) {
             Vertex v = path.get(dist);
             int vDist = v.getDistanceTo(customer.getDestination());
-            int score = (int) Math.pow(2,startDist - vDist);
+            int score = startDist - vDist;
+            if(Preamble.amountOfTaxis == 1) {
+                score = (int) Math.pow(2, score);
+            }
+            if(score > 0 && vDist < 2 * lookaheadDist) {
+                score += 1;
+            }
             if(v.equals(customer.getDestination())) {
-                score += (lookaheadDist - dist) * DESTINATION_WEIGHT; //Add 1 extra point for each closer reaching dist
+                score += (lookaheadDist - dist) * 10; //Add 1 extra point for each closer reaching dist
                 bestScore = score;
                 break;
             }

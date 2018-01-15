@@ -109,7 +109,6 @@ public class Scheduler {
             return;
         }
 
-
         // DiffTIme > 25s
         if (difTime > 25000000000L && Taxi.MAX_CAPACITY > 1) {
 
@@ -133,11 +132,11 @@ public class Scheduler {
             }
         }
 
-        if(!callsLeft && currentMinute > sharedData.getCustomerCallAmount() + 20 && !hasUpscaledLSD && delivered > 0 && difTime * sharedData.getCustomerCallAmount() / delivered < LSD_UPPERTIME) {
+        if(!callsLeft && currentMinute > Preamble.callMinutes + 20 && !hasUpscaledLSD && delivered > 0 && difTime * sharedData.getCustomerCallAmount() / delivered < LSD_UPPERTIME && activeAlgorithm != AlgorithmType.HUNGARIAN) {
 
             if (activeAlgorithm == AlgorithmType.LSD ) {
                 long exp = difTime * sharedData.getCustomerCallAmount() / delivered;
-                int amount = exp * 7 < LSD_UPPERTIME ? 2 : 4;
+                int amount = exp * 6 < LSD_UPPERTIME ? 2 : 4;
                 activeAlgorithm.getAlgorithm().upscale(amount);
                 System.err.println("Increasing LSD Search depth by "+amount);
             } else {
@@ -233,8 +232,8 @@ public class Scheduler {
                         return;
                     }
 
-                } else {
-                    return;
+                } else if(activeAlgorithm != AlgorithmType.LSD && 30000000000L - difTime > 3 * timeNeededToFinish) {
+                    activeAlgorithm = AlgorithmType.LSD;
                 }
 
                 break;
