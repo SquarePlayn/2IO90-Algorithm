@@ -18,12 +18,6 @@ public class Graph {
     private ArrayList<Vertex> clusterOrigins;
     private Vertex graphCenter;
 
-
-    public static long findCenters = 0;
-    public static long findClusters = 0;
-    public static long findGraphCenter = 0;
-
-
     Graph() {
         this.vertices = new ArrayList<>();
         this.hubs = new ArrayList<>();
@@ -215,7 +209,6 @@ public class Graph {
      * The centers of these clusters will then be chosen as the K-centers.
      */
     public void findKCenters() {
-        long start1 = System.nanoTime();
         if(kCenters.size() > 0) {
             Main.debug("Requested to find K-centers while already found");
             return;
@@ -224,7 +217,6 @@ public class Graph {
         //Find the cluster origins
         ArrayList<Vertex> queue = new ArrayList<>();
         if(Preamble.amountOfTaxis < getSize()/3) { //Use greedy approximation for few taxis
-            System.out.println("Strategy A");
             //Figure out if the calls are roughly uniformly distributed or not (using standard deviation of #calls per vertex)
             double avgAmountOfTrainingCalls = 0;
             boolean uniformCallDistribution = true;
@@ -242,11 +234,9 @@ public class Graph {
             }
 
             if(uniformCallDistribution) { //If the calls are (roughly) uniformly distributed...
-                System.out.println("uniform");
                 //Make vertex 0 the first cluster origin
                 makeClusterOrigin(getVertex(0));
             }else { //If there appears to be some pattern in the calls, not occurring by chance...
-                System.out.println("not uniform");
                 //Sort vertices by decreasing amount of training calls
                 ArrayList<Vertex> verticesByTrainingCalls = new ArrayList<>();
                 verticesByTrainingCalls.addAll(vertices);
@@ -280,7 +270,6 @@ public class Graph {
                 }
             }
         } else { //Choose origins randomly for many taxis
-            System.out.println("Strategy B");
             //Randomize the order of the vertices
             ArrayList<Vertex> randomOrder = new ArrayList<>();
             randomOrder.addAll(vertices);
@@ -290,35 +279,6 @@ public class Graph {
                 makeClusterOrigin(randomOrder.get(i));
             }
         }
-        findCenters += System.nanoTime() - start1;
-
-        //TODO: Delete this in final version
-        //Values that give an indication of how well the origins were chosen
-        /*int maxDist = 0;
-        double avgDist = 0;
-        for (Vertex v : vertices) {
-            int closest = Integer.MAX_VALUE;
-            for (Vertex center : clusterOrigins) {
-                if (v.getDistanceTo(center) < closest) {
-                    closest = v.getDistanceTo(center);
-                }
-            }
-
-            if (closest > maxDist) {
-                maxDist = closest;
-            }
-            avgDist += closest;
-        }
-
-
-        avgDist /= getSize();
-
-        System.out.println("Max. distance to origin: " + maxDist);
-        System.out.println("Avg. distance to origin: " + avgDist);
-        System.out.println("  (size = " + clusterOrigins.size() + ")");*/
-        //end of test stuff
-
-        long start2 = System.nanoTime();
 
         //Give each origin a unique clusterID
         for (int i=0; i<clusterOrigins.size(); i++) {
@@ -397,36 +357,10 @@ public class Graph {
             makeKCenter(longestPath.get(longestPath.size()/2));
         }
 
-        findClusters += System.nanoTime() - start2;
-
-        //TODO: Delete this in final version
-        //Values that give an indication of how well the K-centers were chosen
-        int maxDist2 = 0;
-        double avgDist2 = 0;
-        for (Vertex v : vertices) {
-            int closest = Integer.MAX_VALUE;
-            for (Vertex center2 : kCenters) {
-                if (v.getDistanceTo(center2) < closest) {
-                    closest = v.getDistanceTo(center2);
-                }
-            }
-
-            if (closest > maxDist2) {
-                maxDist2 = closest;
-            }
-            avgDist2 += closest;
-        }
-
-        avgDist2 /= getSize();
-
-        System.out.println("Max. distance to K-center: " + maxDist2);
-        System.out.println("Avg. distance to K-center: " + avgDist2);
-        //end of test stuff
 
     }
 
     public void findGraphCenter() {
-        long start3 = System.nanoTime();
         //Find furthest vertex from node 0
         Vertex furthestA = null;
         Vertex furthestB = null;
@@ -481,7 +415,6 @@ public class Graph {
         }
         //Set the midway point in this path as the graph center
         graphCenter =  longestPath.get(longestPath.size()/2);
-        findGraphCenter += System.nanoTime() - start3;
     }
 
     public void makeKCenter(Vertex v) {

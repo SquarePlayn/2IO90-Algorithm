@@ -30,29 +30,6 @@ public class Scheduler {
         createTaxiList();
         testMinutes();
         realMinutes();
-
-        //output the found cluster origins (for testing purposes)
-        /*ArrayList<Integer> kCentersIds = new ArrayList<>();
-        for(int i=0; i<sharedData.getGraph().getClusterOrigins().size(); i++) {
-            kCentersIds.add(sharedData.getGraph().getClusterOrigins().get(i).getId());
-        }
-        System.out.println("Origins: " + kCentersIds.toString());*/
-
-        //output the found cluster centers (for testing purposes)
-        /*ArrayList<Integer> clusterCenterIds = new ArrayList<>();
-        for(int i=0; i<sharedData.getGraph().getKCenters().size(); i++) {
-            clusterCenterIds.add(sharedData.getGraph().getKCenters().get(i).getId());
-        }
-        System.out.println("K-centers: " + clusterCenterIds.toString());*/
-
-        double time_findCenters = ((double) Graph.findCenters)/1000000000;
-        double time_findClusters = ((double) Graph.findClusters)/1000000000;
-        double time_kCenters = time_findCenters+time_findClusters;
-
-        System.out.println("Find centers: " + time_findCenters + "s");
-        System.out.println("Find clusters: " + time_findClusters + "s");
-        System.out.println("Total time: " + time_kCenters + "s");
-        System.out.println("Amount of origins: " + sharedData.getGraph().getClusterOrigins().size());
     }
 
     /**
